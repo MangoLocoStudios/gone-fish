@@ -1,13 +1,17 @@
+mod fish;
+
 use bevy::prelude::*;
 
 fn main() {
     App::new()
+        .insert_resource(ClearColor(Color::rgb(0.9, 0.3, 0.6)))
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
+        .add_systems(Update, fish::update_fishies)
         .run();
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
 
     commands.spawn((TextBundle::from_section(
@@ -24,4 +28,6 @@ fn setup(mut commands: Commands) {
         right: Val::Px(5.0),
         ..default()
     }),));
+
+    fish::setup_fish(commands, asset_server, 0f32);
 }

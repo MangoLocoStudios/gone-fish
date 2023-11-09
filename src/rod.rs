@@ -1,4 +1,8 @@
-use bevy::prelude::*;
+use crate::player::Player;
+use bevy::{prelude::*, sprite::collide_aabb::collide};
+
+#[derive(Event, Default)]
+struct CollisionEvent;
 
 #[derive(Component)]
 pub struct Rod;
@@ -7,12 +11,28 @@ pub struct RodPlugin;
 
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (cast_rod, rod_movement));
+        app.add_event::<CollisionEvent>()
+            .add_systems(Update, (cast_rod, rod_movement, check_for_collisions));
     }
 }
 
-fn cast_rod(mut commands: Commands, keyboard_input: Res<Input<KeyCode>>) {
-    if keyboard_input.pressed(KeyCode::Space) {
+const ROD_LENGTH: f32 = 200.0;
+const ROD_MOVEMENT_UP: f32 = 20.0;
+
+fn cast_rod(
+    mut commands: Commands,
+    keyboard_input: Res<Input<KeyCode>>,
+    rod: Query<&Rod>,
+    player_position: Query<&Transform, With<Player>>,
+) {
+    let player = player_position.single();
+
+    // Only spawn a new rod if there isn't already one spawned
+    if let Ok(_) = rod.get_single() {
+        return;
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Down) {
         commands.spawn((
             Rod,
             SpriteBundle {
@@ -21,24 +41,58 @@ fn cast_rod(mut commands: Commands, keyboard_input: Res<Input<KeyCode>>) {
                     custom_size: Some(Vec2::new(40.0, 40.0)),
                     ..default()
                 },
-                transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+                transform: Transform::from_translation(Vec3::new(player.translation.x, -5.0, 0.0)),
                 ..default()
             },
         ));
     }
 }
 
+fn check_for_collisions(
+    mut commands: Commands,
+    rod_position: Query<(Entity, &Transform), (With<Rod>, Without<Player>)>,
+    player_position: Query<&Transform, With<Player>>,
+    mut collision_events: EventWriter<CollisionEvent>,
+) {
+    let player = player_position.single();
+
+    if let Ok((rod_entity, rod)) = rod_position.get_single() {
+        // Despawn rod when it's reeled back in
+        if let Some(_) = collide(
+            player.translation,
+            player.scale.truncate(),
+            rod.translation,
+            rod.scale.truncate(),
+        ) {
+            // Sends a collision event so that other systems can react to the collision
+            collision_events.send_default();
+
+            commands.entity(rod_entity).despawn();
+        }
+    }
+}
+
 fn rod_movement(
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
-    mut sprite_position: Query<&mut Transform, With<Rod>>,
+    mut rod_position: Query<&mut Transform, (With<Rod>, Without<Player>)>,
+    player_position: Query<&Transform, With<Player>>,
 ) {
-    for mut transform in &mut sprite_position {
-        if keyboard_input.pressed(KeyCode::Up) {
-            transform.translation.y += 150. * time.delta_seconds();
+    let player = player_position.single();
+
+    if let Ok(mut transform) = rod_position.get_single_mut() {
+        // Move rod up
+        if keyboard_input.just_pressed(KeyCode::Space) {
+            transform.translation.y += ROD_MOVEMENT_UP;
         }
-        if keyboard_input.pressed(KeyCode::Down) {
-            transform.translation.y -= 150. * time.delta_seconds();
+
+        // Keep rod x aligned with player
+        transform.translation.x = player.translation.x;
+
+        // Constantly move the rod downwards as long as it's above
+        // the length of the rod
+        if transform.translation.y > (0.0 - ROD_LENGTH) {
+            transform.translation.y -= 50.0 * time.delta_seconds();
         }
     }
 }

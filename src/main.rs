@@ -7,7 +7,7 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.9, 0.3, 0.6)))
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
-        .add_systems(Update, fish::update_fishies)
+        .add_systems(Update, fish::update_fish)
         .run();
 }
 
@@ -29,5 +29,5 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..default()
     }),));
 
-    fish::setup_fish(commands, asset_server, 0f32);
+    fish::setup_fish(commands, asset_server);
 }

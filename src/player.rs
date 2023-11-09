@@ -25,13 +25,13 @@ fn player_movement(
     // From center of player.
     let player_width = transform.scale.truncate().x / 2.;
 
-    if (transform.translation.x - player_width) + 1. > -window_width {
+    if transform.translation.x - player_width > -window_width {
         if keyboard_input.pressed(KeyCode::Left) {
             transform.translation.x -= 150. * time.delta_seconds();
         }
     }
 
-    if (transform.translation.x + player_width) + 1. < window_width {
+    if transform.translation.x + player_width < window_width {
         if keyboard_input.pressed(KeyCode::Right) {
             transform.translation.x += 150. * time.delta_seconds();
         }

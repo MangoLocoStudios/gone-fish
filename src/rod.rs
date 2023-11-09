@@ -1,8 +1,15 @@
 use crate::player::Player;
 use bevy::{prelude::*, sprite::collide_aabb::collide};
 
+// We may not need these events but i'll keep them here for now.
 #[derive(Event, Default)]
-struct CollisionEvent;
+struct BoatCollisionEvent;
+
+#[derive(Event, Default)]
+struct FishCollisionEvent;
+
+#[derive(Event, Default)]
+struct TrashCollisionEvent;
 
 #[derive(Component)]
 pub struct Rod;
@@ -11,7 +18,7 @@ pub struct RodPlugin;
 
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<CollisionEvent>()
+        app.add_event::<BoatCollisionEvent>()
             .add_systems(Update, (cast_rod, rod_movement, check_for_collisions));
     }
 }
@@ -38,10 +45,13 @@ fn cast_rod(
             SpriteBundle {
                 sprite: Sprite {
                     color: Color::rgb(0.25, 0.75, 0.25),
-                    custom_size: Some(Vec2::new(40.0, 40.0)),
                     ..default()
                 },
-                transform: Transform::from_translation(Vec3::new(player.translation.x, -5.0, 0.0)),
+                transform: Transform {
+                    translation: Vec3::new(player.translation.x, -5.0, 0.0),
+                    scale: Vec3::new(40.0, 40.0, 0.0),
+                    ..default()
+                },
                 ..default()
             },
         ));
@@ -52,7 +62,7 @@ fn check_for_collisions(
     mut commands: Commands,
     rod_position: Query<(Entity, &Transform), (With<Rod>, Without<Player>)>,
     player_position: Query<&Transform, With<Player>>,
-    mut collision_events: EventWriter<CollisionEvent>,
+    mut collision_events: EventWriter<BoatCollisionEvent>,
 ) {
     let player = player_position.single();
 

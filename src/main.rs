@@ -19,10 +19,13 @@ fn setup(mut commands: Commands) {
         SpriteBundle {
             sprite: Sprite {
                 color: Color::rgb(0.25, 0.25, 0.75),
-                custom_size: Some(Vec2::new(100.0, 50.0)),
                 ..default()
             },
-            transform: Transform::from_translation(Vec3::new(0.0, 50.0, 0.0)),
+            transform: Transform {
+                translation: Vec3::new(0.0, 50.0, 0.0),
+                scale: Vec3::new(100.0, 50.0, 0.0),
+                ..default()
+            },
             ..default()
         },
     ));

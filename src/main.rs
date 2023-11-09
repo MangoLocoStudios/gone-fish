@@ -1,11 +1,9 @@
 use bevy::prelude::*;
 use player::{Player, PlayerMovementPlugin};
 use rod::RodPlugin;
-use crate::fish_storage::FishStorage;
 
 pub mod player;
 pub mod rod;
-pub mod fish_storage;
 
 fn main() {
     App::new()
@@ -19,10 +17,6 @@ fn setup(mut commands: Commands) {
 
     commands.spawn((
         Player,
-        FishStorage {
-            current: 0,
-            max: 10
-        },
         SpriteBundle {
             sprite: Sprite {
                 color: Color::rgb(0.25, 0.25, 0.75),

@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use crate::fish_storage::FishStorage;
 
 #[derive(Component)]
 pub struct Player;
@@ -25,12 +24,4 @@ fn player_movement(
             transform.translation.x += 150. * time.delta_seconds();
         }
     }
-}
-
-// This fn is more for the collision system
-fn update_storage(
-    mut fish_storage: Query<&mut FishStorage, With<Player>>,
-) {
-    let mut storage = fish_storage.single_mut();
-    FishStorage::update_storage(5, None, &mut storage);
 }

@@ -1,5 +1,3 @@
-use bevy::prelude::*;
-
 #[derive(Clone, Copy)]
 pub enum Directions {
     LEFT,
@@ -20,9 +18,4 @@ impl Directions {
             Self::RIGHT => false,
         }
     }
-}
-
-#[derive(Component)]
-pub struct Direction {
-    pub direction: Directions,
 }

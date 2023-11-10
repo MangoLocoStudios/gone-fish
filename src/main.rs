@@ -1,6 +1,6 @@
 pub mod fish;
-pub mod direction;
-pub mod speed;
+pub mod directions;
+pub mod components;
 
 use bevy::prelude::*;
 use fish::FishPlugin;

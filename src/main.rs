@@ -1,27 +1,32 @@
 use bevy::prelude::*;
+use player::{Player, PlayerMovementPlugin};
+use rod::RodPlugin;
+
+pub mod player;
+pub mod rod;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins((DefaultPlugins, PlayerMovementPlugin, RodPlugin))
         .add_systems(Startup, setup)
         .run();
 }
-
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
-    commands.spawn((TextBundle::from_section(
-        "Gone\nFish!",
-        TextStyle {
-            font_size: 100.0,
+    commands.spawn((
+        Player,
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgb(0.25, 0.25, 0.75),
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3::new(0.0, 50.0, 0.0),
+                scale: Vec3::new(100.0, 50.0, 0.0),
+                ..default()
+            },
             ..default()
         },
-    )
-    .with_text_alignment(TextAlignment::Center)
-    .with_style(Style {
-        position_type: PositionType::Absolute,
-        bottom: Val::Px(5.0),
-        right: Val::Px(5.0),
-        ..default()
-    }),));
+    ));
 }

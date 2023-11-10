@@ -1,13 +1,14 @@
 mod fish;
 
 use bevy::prelude::*;
+use fish::FishPlugin;
 
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.9, 0.3, 0.6)))
         .add_plugins(DefaultPlugins)
+        .add_plugins(FishPlugin) // TODO: Make this plugin work :(
         .add_systems(Startup, setup)
-        .add_systems(Update, fish::update_fish)
         .run();
 }
 

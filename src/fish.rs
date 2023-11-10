@@ -1,8 +1,18 @@
 use bevy::prelude::*;
 use rand;
 
+// TODO: Make the plugin work innit
+pub struct FishPlugin {}
+
+impl Plugin for FishPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, setup_fish);
+        app.add_systems(Update, update_fish);
+    }
+}
+
 pub fn setup_fish(mut commands: Commands, asset_server: Res<AssetServer>) {
-    for _ in 0..10 {
+    for _ in 0..5 {
         let vertical_position = rand::random::<f32>() * -400.0 + 20.0;
         let horizontal_position = rand::random::<f32>() * -400.0 + 20.0;
         let going_left = rand::random::<bool>();

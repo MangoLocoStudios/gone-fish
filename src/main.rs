@@ -1,6 +1,7 @@
 pub mod components;
 pub mod events;
 pub mod fish;
+pub mod fish_storage;
 pub mod player;
 pub mod rod;
 

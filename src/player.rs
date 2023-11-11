@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::fish_storage::FishStorage;
+
 #[derive(Component)]
 pub struct Player;
 
@@ -15,6 +17,10 @@ impl Plugin for PlayerPlugin {
 pub fn setup(mut commands: Commands) {
     commands.spawn((
         Player,
+        FishStorage {
+            current: 0,
+            max: 15,
+        },
         SpriteBundle {
             sprite: Sprite {
                 color: Color::rgb(0.25, 0.25, 0.75),

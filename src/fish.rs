@@ -5,7 +5,6 @@ use crate::{
 };
 use bevy::prelude::*;
 
-// All things a fish can collide with
 pub enum ThingsFishCanCollideWith {
     Boat,
     Rod,

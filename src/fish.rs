@@ -1,13 +1,33 @@
 use crate::{
-    components::{Direction, Speed, Weight},
+    components::{Direction, FishStorage, Speed, Weight},
     events::{BoatCollisionEvent, FishCollisionEvent},
+    player::Player,
+    resources::FishStored,
     rod::Rod,
 };
 use bevy::prelude::*;
+use rand::{distributions::Standard, prelude::Distribution, Rng};
 
 pub enum ThingsFishCanCollideWith {
     Boat,
     Rod,
+}
+
+#[derive(Component, Clone, Copy, Debug)]
+pub enum FishVariant {
+    Trout,
+    Tuna,
+    Salmon,
+}
+
+impl Distribution<FishVariant> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> FishVariant {
+        match rng.gen_range(0..=2) {
+            0 => FishVariant::Tuna,
+            1 => FishVariant::Trout,
+            _ => FishVariant::Salmon,
+        }
+    }
 }
 
 #[derive(Component)]
@@ -26,6 +46,7 @@ struct FishBundle {
     speed: Speed,
     weight: Weight,
     state: FishState,
+    variant: FishVariant,
     // This might change to a SpriteSheetBundle eventually.
     sprite: SpriteBundle,
 }
@@ -38,6 +59,7 @@ impl Default for FishBundle {
             speed: Speed { current: 200. },
             weight: Weight { current: 0.1 },
             state: FishState::Swimming,
+            variant: FishVariant::Tuna,
             sprite: Default::default(),
         }
     }
@@ -80,6 +102,11 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Que
                 ..default()
             },
             direction,
+            variant: rand::random(),
+            weight: Weight {
+                // Round weight to .2 decimal places
+                current: (rand::thread_rng().gen_range(0.0..3.0) * 100.0_f32).round() / 100.0,
+            },
             ..default()
         });
     }
@@ -140,17 +167,33 @@ pub fn fish_movement(
 pub fn check_for_collisions(
     mut commands: Commands,
     mut event: EventReader<FishCollisionEvent>,
-    mut fish_query: Query<(Entity, &mut FishState), With<Fish>>,
+    mut player_query: Query<&mut FishStorage, With<Player>>,
+    mut fish_stored: ResMut<FishStored>,
+    mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), With<Fish>>,
 ) {
+    let mut fish_storage = player_query.single_mut();
+
     for ev in event.read() {
-        match ev.entity {
-            ThingsFishCanCollideWith::Boat => commands.entity(ev.fish).despawn(),
-            ThingsFishCanCollideWith::Rod => {
-                for (fish, mut state) in &mut fish_query {
-                    if fish == ev.fish {
-                        *state = FishState::Caught
+        for (fish, mut state, fish_variant, weight) in &mut fish_query {
+            if fish != ev.fish {
+                continue;
+            }
+
+            match ev.entity {
+                ThingsFishCanCollideWith::Boat => {
+                    if (weight.current + fish_storage.current) > fish_storage.max {
+                        *state = FishState::Swimming
+                    } else {
+                        fish_storage.current += weight.current;
+                        fish_stored.fish.push((*fish_variant, *weight));
+                        commands.entity(ev.fish).despawn()
                     }
+                    println!(
+                        "[DEBUG] Fish caught {:?} - current weight {} - max weight {}",
+                        fish_stored.fish, fish_storage.current, fish_storage.max
+                    );
                 }
+                ThingsFishCanCollideWith::Rod => *state = FishState::Caught,
             }
         }
     }

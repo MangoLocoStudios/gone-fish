@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::fish_storage::FishStorage;
+use crate::{components::FishStorage, resources::FishStored};
 
 #[derive(Component)]
 pub struct Player;
@@ -9,7 +9,8 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
+        app.init_resource::<FishStored>()
+            .add_systems(Startup, setup)
             .add_systems(Update, player_movement);
     }
 }
@@ -18,8 +19,8 @@ pub fn setup(mut commands: Commands) {
     commands.spawn((
         Player,
         FishStorage {
-            current: 0,
-            max: 15,
+            current: 0.,
+            max: 3.,
         },
         SpriteBundle {
             sprite: Sprite {

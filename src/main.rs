@@ -1,4 +1,10 @@
+pub mod components;
+pub mod directions;
+pub mod fish;
+
 use bevy::prelude::*;
+
+use fish::FishPlugin;
 use player::{Player, PlayerMovementPlugin};
 use rod::RodPlugin;
 use crate::fish_storage::FishStorage;
@@ -9,10 +15,11 @@ pub mod fish_storage;
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, PlayerMovementPlugin, RodPlugin))
+        .add_plugins((DefaultPlugins, PlayerMovementPlugin, RodPlugin, FishPlugin))
         .add_systems(Startup, setup)
         .run();
 }
+
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 

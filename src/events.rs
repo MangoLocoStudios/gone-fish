@@ -1,5 +1,6 @@
 use crate::fish::ThingsFishCanCollideWith;
 use bevy::prelude::*;
+use bevy::sprite::collide_aabb::Collision;
 
 #[derive(Event, Default)]
 pub struct BoatCollisionEvent;
@@ -12,3 +13,8 @@ pub struct FishCollisionEvent {
 
 #[derive(Event, Default)]
 pub struct TrashCollisionEvent;
+
+#[derive(Event)]
+pub struct PortCollisionEvent {
+    pub collision_direction: Collision
+}

@@ -2,22 +2,31 @@ use crate::{
     components::{Direction, FishStorage, Speed, Weight},
     events::{BoatCollisionEvent, FishCollisionEvent},
     player::Player,
-    resources::FishStored,
+    resources::PlayerFishStored,
     rod::Rod,
 };
 use bevy::prelude::*;
 use rand::{distributions::Standard, prelude::Distribution, Rng};
+use std::slice::Iter;
 
 pub enum ThingsFishCanCollideWith {
     Boat,
     Rod,
 }
 
-#[derive(Component, Clone, Copy, Debug)]
+#[derive(Component, Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum FishVariant {
     Trout,
     Tuna,
     Salmon,
+}
+
+impl FishVariant {
+    pub fn iterator() -> Iter<'static, FishVariant> {
+        static FISH_VARIANTS: [FishVariant; 3] =
+            [FishVariant::Trout, FishVariant::Tuna, FishVariant::Salmon];
+        FISH_VARIANTS.iter()
+    }
 }
 
 impl Distribution<FishVariant> for Standard {
@@ -168,7 +177,7 @@ pub fn check_for_collisions(
     mut commands: Commands,
     mut event: EventReader<FishCollisionEvent>,
     mut player_query: Query<&mut FishStorage, With<Player>>,
-    mut fish_stored: ResMut<FishStored>,
+    mut fish_stored: ResMut<PlayerFishStored>,
     mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), With<Fish>>,
 ) {
     let mut fish_storage = player_query.single_mut();

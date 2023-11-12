@@ -120,7 +120,10 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Que
             variant: rand::random(),
             weight: Weight {
                 // Round weight to .2 decimal places
-                current: (rand::thread_rng().gen_range(FISH_WEIGHT_MIN..FISH_WEIGHT_MAX) * 100.0_f32).round() / 100.0,
+                current: (rand::thread_rng().gen_range(FISH_WEIGHT_MIN..FISH_WEIGHT_MAX)
+                    * 100.0_f32)
+                    .round()
+                    / 100.0,
             },
             ..default()
         });
@@ -242,7 +245,10 @@ pub fn check_for_trash_collisions(
                 FishState::Swimming => {}
                 FishState::Caught => {
                     commands.entity(fish).insert(Invincibility {
-                        invincibility_timer: Timer::from_seconds(FISH_INVINCIBILITY_TIME, TimerMode::Once),
+                        invincibility_timer: Timer::from_seconds(
+                            FISH_INVINCIBILITY_TIME,
+                            TimerMode::Once,
+                        ),
                     });
                     *state = FishState::Swimming
                 }

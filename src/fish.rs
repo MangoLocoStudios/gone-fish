@@ -1,17 +1,13 @@
+use bevy::prelude::*;
+use rand::{distributions::Standard, prelude::Distribution, Rng};
+
 use crate::{
-    components::{Direction, FishStorage, Speed, Weight},
-    events::{BoatCollisionEvent, FishCollisionEvent},
+    components::{Direction, FishStorage, Invincibility, Speed, Weight},
+    events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     player::Player,
     resources::{AliveFish, FishStored},
     rod::Rod,
 };
-use bevy::prelude::*;
-use rand::{distributions::Standard, prelude::Distribution, Rng};
-
-pub enum ThingsFishCanCollideWith {
-    Boat,
-    Rod,
-}
 
 #[derive(Component, Clone, Copy, Debug)]
 pub enum FishVariant {
@@ -65,16 +61,28 @@ impl Default for FishBundle {
     }
 }
 
+const FISH_INVINCIBILITY_TIME: f32 = 1.;
+const FISH_SPEED_MIN: f32 = 150.;
+const FISH_SPEED_MAX: f32 = 300.;
+const FISH_WEIGHT_MIN: f32 = 0.1;
+const FISH_WEIGHT_MAX: f32 = 3.;
+
 pub struct FishPlugin;
 
 impl Plugin for FishPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<BoatCollisionEvent>()
+        app.add_event::<FishCollisionWithRodEvent>()
             .init_resource::<AliveFish>()
             .add_systems(Startup, setup)
             .add_systems(
                 Update,
-                (fish_movement, check_for_collisions, update_fish_count),
+                (
+                    fish_movement,
+                    check_for_rod_collisions,
+                    check_for_trash_collisions,
+                    check_for_boat_collisions,
+                    handle_invincibilities,
+                ),
             );
     }
 }
@@ -106,10 +114,16 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Que
                 ..default()
             },
             direction,
+            speed: Speed {
+                current: rand::thread_rng().gen_range(FISH_SPEED_MIN..FISH_SPEED_MAX),
+            },
             variant: rand::random(),
             weight: Weight {
                 // Round weight to .2 decimal places
-                current: (rand::thread_rng().gen_range(0.0..3.0) * 100.0_f32).round() / 100.0,
+                current: (rand::thread_rng().gen_range(FISH_WEIGHT_MIN..FISH_WEIGHT_MAX)
+                    * 100.0_f32)
+                    .round()
+                    / 100.0,
             },
             ..default()
         });
@@ -168,37 +182,89 @@ pub fn fish_movement(
     }
 }
 
-pub fn check_for_collisions(
+pub fn check_for_boat_collisions(
     mut commands: Commands,
-    mut event: EventReader<FishCollisionEvent>,
+    mut boat_collision_event: EventReader<BoatCollisionEvent>,
     mut player_query: Query<&mut FishStorage, With<Player>>,
     mut fish_stored: ResMut<FishStored>,
     mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), With<Fish>>,
 ) {
     let mut fish_storage = player_query.single_mut();
 
-    for ev in event.read() {
+    for _ in boat_collision_event.read() {
         for (fish, mut state, fish_variant, weight) in &mut fish_query {
+            match *state {
+                FishState::Swimming => {}
+                FishState::Caught => {
+                    if (weight.current + fish_storage.current) > fish_storage.max {
+                        *state = FishState::Swimming;
+
+                        println!(
+                            "[DEBUG] Fish {:?} was too heavy, weighing at {} - current weight {} - max weight {}",
+                            (fish_variant, weight), weight.current, fish_storage.current, fish_storage.max
+                        );
+                    } else {
+                        fish_storage.current += weight.current;
+                        fish_stored.fish.push((*fish_variant, *weight));
+                        commands.entity(fish).despawn();
+
+                        println!(
+                            "[DEBUG] Fish caught {:?} - current weight {} - max weight {}",
+                            fish_stored.fish, fish_storage.current, fish_storage.max
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub fn check_for_rod_collisions(
+    mut fish_collision_with_rod_event: EventReader<FishCollisionWithRodEvent>,
+    mut fish_query: Query<(Entity, &mut FishState), (With<Fish>, Without<Invincibility>)>,
+) {
+    for ev in fish_collision_with_rod_event.read() {
+        for (fish, mut state) in &mut fish_query {
             if fish != ev.fish {
                 continue;
             }
 
-            match ev.entity {
-                ThingsFishCanCollideWith::Boat => {
-                    if (weight.current + fish_storage.current) > fish_storage.max {
-                        *state = FishState::Swimming
-                    } else {
-                        fish_storage.current += weight.current;
-                        fish_stored.fish.push((*fish_variant, *weight));
-                        commands.entity(ev.fish).despawn()
-                    }
-                    println!(
-                        "[DEBUG] Fish caught {:?} - current weight {} - max weight {}",
-                        fish_stored.fish, fish_storage.current, fish_storage.max
-                    );
+            *state = FishState::Caught
+        }
+    }
+}
+
+pub fn check_for_trash_collisions(
+    mut commands: Commands,
+    mut trash_collision_event: EventReader<TrashCollisionEvent>,
+    mut fish_query: Query<(Entity, &mut FishState), With<Fish>>,
+) {
+    for _ in trash_collision_event.read() {
+        for (fish, mut state) in &mut fish_query {
+            match *state {
+                FishState::Swimming => {}
+                FishState::Caught => {
+                    commands.entity(fish).insert(Invincibility {
+                        invincibility_timer: Timer::from_seconds(
+                            FISH_INVINCIBILITY_TIME,
+                            TimerMode::Once,
+                        ),
+                    });
+                    *state = FishState::Swimming
                 }
-                ThingsFishCanCollideWith::Rod => *state = FishState::Caught,
             }
+        }
+    }
+}
+
+fn handle_invincibilities(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut Invincibility)>,
+    timer: Res<Time>,
+) {
+    for (e, mut i) in &mut query {
+        if i.invincibility_timer.tick(timer.delta()).finished() {
+            commands.entity(e).remove::<Invincibility>();
         }
     }
 }

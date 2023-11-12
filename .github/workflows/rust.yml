@@ -1,4 +1,4 @@
-name: Rust CI
+name: Build
 
 on:
   push:
@@ -24,15 +24,6 @@ jobs:
         toolchain: stable
         override: true
 
-    - name: Cache dependencies
-      uses: actions/cache@v3.3.2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
     - name: Build
       run: cargo build
 
@@ -40,4 +31,4 @@ jobs:
       run: cargo fmt --check
 
     - name: Lint with clippy
-      run: cargo clippy -- -D warnings
+      run: cargo clippy -D warnings

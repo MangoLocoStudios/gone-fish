@@ -2,7 +2,7 @@ use crate::{
     components::FishStorage, events::PortCollisionEvent, port::Port, resources::PlayerFishStored,
 };
 use bevy::prelude::*;
-use bevy::sprite::collide_aabb::{collide};
+use bevy::sprite::collide_aabb::collide;
 
 #[derive(Component)]
 pub struct Player;

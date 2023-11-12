@@ -23,11 +23,7 @@ impl Default for PortStorage {
     fn default() -> Self {
         Self {
             weight: 0.,
-            fish: FishVariant::iterator()
-                .map(|key| {
-                    (*key, 0)
-                })
-                .collect(),
+            fish: FishVariant::iterator().map(|key| (*key, 0)).collect(),
         }
     }
 }

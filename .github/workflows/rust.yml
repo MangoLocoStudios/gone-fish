@@ -1,4 +1,4 @@
-name: Build
+name: Rust
 
 on:
   push:
@@ -16,14 +16,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: Set up Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-
     - name: Build
       run: cargo build
 

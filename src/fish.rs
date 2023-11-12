@@ -1,6 +1,6 @@
 use crate::{
     components::{Direction, FishStorage, Speed, Weight},
-    events::{BoatCollisionEvent, FishCollisionEvent},
+    events::{BoatCollisionEvent, FishCollisionEvent, TrashCollisionEvent},
     player::Player,
     resources::FishStored,
     rod::Rod,
@@ -102,6 +102,9 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Que
                 ..default()
             },
             direction,
+            speed: Speed {
+                current: rand::thread_rng().gen_range(150.0..300.0),
+            },
             variant: rand::random(),
             weight: Weight {
                 // Round weight to .2 decimal places
@@ -166,14 +169,16 @@ pub fn fish_movement(
 
 pub fn check_for_collisions(
     mut commands: Commands,
-    mut event: EventReader<FishCollisionEvent>,
+    mut fish_collision_event: EventReader<FishCollisionEvent>,
+    mut trash_collision_event: EventReader<TrashCollisionEvent>,
     mut player_query: Query<&mut FishStorage, With<Player>>,
     mut fish_stored: ResMut<FishStored>,
     mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), With<Fish>>,
 ) {
     let mut fish_storage = player_query.single_mut();
 
-    for ev in event.read() {
+    // Check for collision with rod / boat
+    for ev in fish_collision_event.read() {
         for (fish, mut state, fish_variant, weight) in &mut fish_query {
             if fish != ev.fish {
                 continue;
@@ -182,18 +187,34 @@ pub fn check_for_collisions(
             match ev.entity {
                 ThingsFishCanCollideWith::Boat => {
                     if (weight.current + fish_storage.current) > fish_storage.max {
-                        *state = FishState::Swimming
+                        *state = FishState::Swimming;
+
+                        println!(
+                            "[DEBUG] Fish {:?} was too heavy, weighing at {} - current weight {} - max weight {}",
+                            (fish_variant, weight), weight.current, fish_storage.current, fish_storage.max
+                        );
                     } else {
                         fish_storage.current += weight.current;
                         fish_stored.fish.push((*fish_variant, *weight));
-                        commands.entity(ev.fish).despawn()
+                        commands.entity(ev.fish).despawn();
+
+                        println!(
+                            "[DEBUG] Fish caught {:?} - current weight {} - max weight {}",
+                            fish_stored.fish, fish_storage.current, fish_storage.max
+                        );
                     }
-                    println!(
-                        "[DEBUG] Fish caught {:?} - current weight {} - max weight {}",
-                        fish_stored.fish, fish_storage.current, fish_storage.max
-                    );
                 }
                 ThingsFishCanCollideWith::Rod => *state = FishState::Caught,
+            }
+        }
+    }
+
+    // Check for trash collision
+    for _ in trash_collision_event.read() {
+        for (_, mut state, _, _) in &mut fish_query {
+            match *state {
+                FishState::Swimming => {}
+                FishState::Caught => *state = FishState::Swimming,
             }
         }
     }

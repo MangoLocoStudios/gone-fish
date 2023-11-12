@@ -1,7 +1,8 @@
 use crate::{
-    events::{BoatCollisionEvent, FishCollisionEvent},
+    events::{BoatCollisionEvent, FishCollisionEvent, TrashCollisionEvent},
     fish::{Fish, FishState, ThingsFishCanCollideWith},
     player::Player,
+    trash::Trash,
 };
 use bevy::{prelude::*, sprite::collide_aabb::collide};
 
@@ -18,7 +19,8 @@ pub struct RodPlugin;
 
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<BoatCollisionEvent>()
+        app.add_event::<TrashCollisionEvent>()
+            .add_event::<BoatCollisionEvent>()
             .add_event::<FishCollisionEvent>()
             .add_systems(
                 Update,
@@ -27,6 +29,7 @@ impl Plugin for RodPlugin {
                     rod_movement,
                     check_for_boat_collisions,
                     check_for_fish_collisions,
+                    check_for_trash_collisions,
                 ),
             );
     }
@@ -142,6 +145,38 @@ fn check_for_fish_collisions(
                 *state = RodState::Reeling;
             }
             RodState::Reeling => {}
+        }
+    }
+}
+
+fn check_for_trash_collisions(
+    mut rod_query: Query<(&Transform, &mut RodState), With<Rod>>,
+    trash_query: Query<&Transform, With<Trash>>,
+    mut collision_events: EventWriter<TrashCollisionEvent>,
+) {
+    let (rod, mut state) = match rod_query.get_single_mut() {
+        Ok((rod, state)) => (rod, state),
+        Err(_) => return,
+    };
+
+    for trash_transform in &trash_query {
+        if collide(
+            trash_transform.translation,
+            trash_transform.scale.truncate(),
+            rod.translation,
+            rod.scale.truncate(),
+        )
+        .is_none()
+        {
+            continue;
+        }
+
+        match *state {
+            RodState::Idle => {}
+            RodState::Reeling => {
+                collision_events.send_default();
+                *state = RodState::Idle;
+            }
         }
     }
 }

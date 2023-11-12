@@ -261,16 +261,12 @@ pub fn update_fish_count(
     fish_query: Query<&Sprite, With<Fish>>,
     mut alive_fish: ResMut<AliveFish>,
 ) {
-    let mut found_fish = 0;
-    for _ in fish_query.iter() {
-        found_fish += 1;
+    let fish_found = fish_query.iter().count() as u32;
+
+    if fish_found == alive_fish.count {
+        return;
     }
 
-    match alive_fish.count == found_fish {
-        true => return,
-        false => 69,
-    };
-
-    alive_fish.count = found_fish;
-    println!("[DEBUG]Current fish count: {0}", alive_fish.count);
+    alive_fish.count = fish_found;
+    println!("[DEBUG] Current fish count: {}", alive_fish.count);
 }

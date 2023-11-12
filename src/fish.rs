@@ -1,6 +1,40 @@
-use crate::components::{Direction, Speed, Weight};
-use crate::directions::Directions;
+use crate::{
+    components::{Direction, FishStorage, Speed, Weight},
+    events::{BoatCollisionEvent, FishCollisionEvent},
+    player::Player,
+    resources::FishStored,
+    rod::Rod,
+};
 use bevy::prelude::*;
+use rand::{distributions::Standard, prelude::Distribution, Rng};
+
+pub enum ThingsFishCanCollideWith {
+    Boat,
+    Rod,
+}
+
+#[derive(Component, Clone, Copy, Debug)]
+pub enum FishVariant {
+    Trout,
+    Tuna,
+    Salmon,
+}
+
+impl Distribution<FishVariant> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> FishVariant {
+        match rng.gen_range(0..=2) {
+            0 => FishVariant::Tuna,
+            1 => FishVariant::Trout,
+            _ => FishVariant::Salmon,
+        }
+    }
+}
+
+#[derive(Component)]
+pub enum FishState {
+    Swimming,
+    Caught,
+}
 
 #[derive(Component)]
 pub struct Fish;
@@ -11,6 +45,8 @@ struct FishBundle {
     direction: Direction,
     speed: Speed,
     weight: Weight,
+    state: FishState,
+    variant: FishVariant,
     // This might change to a SpriteSheetBundle eventually.
     sprite: SpriteBundle,
 }
@@ -19,11 +55,11 @@ impl Default for FishBundle {
     fn default() -> Self {
         FishBundle {
             marker: Fish,
-            direction: Direction {
-                direction: Directions::LEFT,
-            },
+            direction: Direction::Left,
             speed: Speed { current: 200. },
             weight: Weight { current: 0.1 },
+            state: FishState::Swimming,
+            variant: FishVariant::Tuna,
             sprite: Default::default(),
         }
     }
@@ -33,8 +69,9 @@ pub struct FishPlugin;
 
 impl Plugin for FishPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
-            .add_systems(Update, fish_movement);
+        app.add_event::<BoatCollisionEvent>()
+            .add_systems(Startup, setup)
+            .add_systems(Update, (fish_movement, check_for_collisions));
     }
 }
 
@@ -46,7 +83,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Que
     for _ in 0..5 {
         let vertical_position = rand::random::<f32>() * -400. + 20.;
         let horizontal_position = rand::random::<f32>() * window_width + 20.;
-        let direction = Directions::random();
+        let direction = Direction::random_y();
 
         commands.spawn(FishBundle {
             sprite: SpriteBundle {
@@ -57,12 +94,19 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Que
                     ..default()
                 },
                 sprite: Sprite {
-                    flip_x: !direction.going_left(),
+                    // Sprite is facing left, we must flip it if it is going
+                    // right.
+                    flip_x: matches!(direction, Direction::Right),
                     ..default()
                 },
                 ..default()
             },
-            direction: Direction { direction },
+            direction,
+            variant: rand::random(),
+            weight: Weight {
+                // Round weight to .2 decimal places
+                current: (rand::thread_rng().gen_range(0.0..3.0) * 100.0_f32).round() / 100.0,
+            },
             ..default()
         });
     }
@@ -71,30 +115,86 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Que
 pub fn fish_movement(
     time: Res<Time>,
     window: Query<&mut Window>,
-    mut fish_query: Query<(&mut Sprite, &mut Transform, &mut Direction, &Speed), With<Fish>>,
+    rod_query: Query<&Transform, (With<Rod>, Without<Fish>)>,
+    mut fish_query: Query<
+        (
+            &mut Sprite,
+            &mut Transform,
+            &mut Direction,
+            &Speed,
+            &FishState,
+        ),
+        With<Fish>,
+    >,
 ) {
     // From center of screen.
     let window = window.single();
     let window_width = window.resolution.width() / 2.;
 
-    for (mut fish, mut transform, mut direction, speed) in &mut fish_query {
-        // Move the thing
-        match direction.direction {
-            Directions::LEFT => {
-                transform.translation.x -= 1.0 * time.delta_seconds() * speed.current
+    for (mut fish, mut transform, mut direction, speed, state) in &mut fish_query {
+        match state {
+            FishState::Swimming => {
+                // Move the thing
+                match *direction {
+                    Direction::Left => {
+                        transform.translation.x -= 1.0 * time.delta_seconds() * speed.current
+                    }
+                    Direction::Right => {
+                        transform.translation.x += 1.0 * time.delta_seconds() * speed.current
+                    }
+                    _ => {}
+                }
+
+                // Flip the thing when at edge
+                if transform.translation.x < -window_width {
+                    *direction = Direction::Right;
+                    fish.flip_x = true;
+                } else if transform.translation.x > window_width {
+                    *direction = Direction::Left;
+                    fish.flip_x = false;
+                }
             }
-            Directions::RIGHT => {
-                transform.translation.x += 1.0 * time.delta_seconds() * speed.current
+            FishState::Caught => {
+                if let Ok(rod) = rod_query.get_single() {
+                    transform.translation.x = rod.translation.x;
+                    transform.translation.y = rod.translation.y;
+                }
             }
         }
+    }
+}
 
-        // Flip the thing when at edge
-        if transform.translation.x < -window_width {
-            direction.direction = Directions::RIGHT;
-            fish.flip_x = true;
-        } else if transform.translation.x > window_width {
-            direction.direction = Directions::LEFT;
-            fish.flip_x = false;
+pub fn check_for_collisions(
+    mut commands: Commands,
+    mut event: EventReader<FishCollisionEvent>,
+    mut player_query: Query<&mut FishStorage, With<Player>>,
+    mut fish_stored: ResMut<FishStored>,
+    mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), With<Fish>>,
+) {
+    let mut fish_storage = player_query.single_mut();
+
+    for ev in event.read() {
+        for (fish, mut state, fish_variant, weight) in &mut fish_query {
+            if fish != ev.fish {
+                continue;
+            }
+
+            match ev.entity {
+                ThingsFishCanCollideWith::Boat => {
+                    if (weight.current + fish_storage.current) > fish_storage.max {
+                        *state = FishState::Swimming
+                    } else {
+                        fish_storage.current += weight.current;
+                        fish_stored.fish.push((*fish_variant, *weight));
+                        commands.entity(ev.fish).despawn()
+                    }
+                    println!(
+                        "[DEBUG] Fish caught {:?} - current weight {} - max weight {}",
+                        fish_stored.fish, fish_storage.current, fish_storage.max
+                    );
+                }
+                ThingsFishCanCollideWith::Rod => *state = FishState::Caught,
+            }
         }
     }
 }

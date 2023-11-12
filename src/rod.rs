@@ -1,15 +1,15 @@
-use crate::player::Player;
+use crate::{
+    events::{BoatCollisionEvent, FishCollisionEvent},
+    fish::{Fish, FishState, ThingsFishCanCollideWith},
+    player::Player,
+};
 use bevy::{prelude::*, sprite::collide_aabb::collide};
 
-// We may not need these events but i'll keep them here for now.
-#[derive(Event, Default)]
-struct BoatCollisionEvent;
-
-#[derive(Event, Default)]
-struct FishCollisionEvent;
-
-#[derive(Event, Default)]
-struct TrashCollisionEvent;
+#[derive(Component)]
+enum RodState {
+    Idle,
+    Reeling,
+}
 
 #[derive(Component)]
 pub struct Rod;
@@ -19,7 +19,16 @@ pub struct RodPlugin;
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<BoatCollisionEvent>()
-            .add_systems(Update, (cast_rod, rod_movement, check_for_collisions));
+            .add_event::<FishCollisionEvent>()
+            .add_systems(
+                Update,
+                (
+                    cast_rod,
+                    rod_movement,
+                    check_for_boat_collisions,
+                    check_for_fish_collisions,
+                ),
+            );
     }
 }
 
@@ -35,13 +44,14 @@ fn cast_rod(
     let player = player_position.single();
 
     // Only spawn a new rod if there isn't already one spawned
-    if let Ok(_) = rod.get_single() {
+    if rod.get_single().is_ok() {
         return;
     }
 
     if keyboard_input.just_pressed(KeyCode::Down) {
         commands.spawn((
             Rod,
+            RodState::Idle,
             SpriteBundle {
                 sprite: Sprite {
                     color: Color::rgb(0.25, 0.75, 0.25),
@@ -58,26 +68,80 @@ fn cast_rod(
     }
 }
 
-fn check_for_collisions(
+fn check_for_boat_collisions(
     mut commands: Commands,
-    rod_position: Query<(Entity, &Transform), (With<Rod>, Without<Player>)>,
-    player_position: Query<&Transform, With<Player>>,
-    mut collision_events: EventWriter<BoatCollisionEvent>,
+    rod_query: Query<(Entity, &Transform), (With<Rod>, Without<Player>)>,
+    fish_query: Query<(Entity, &FishState), With<Fish>>,
+    player_query: Query<&Transform, With<Player>>,
+    mut boat_collision_event: EventWriter<BoatCollisionEvent>,
+    mut fish_collision_event: EventWriter<FishCollisionEvent>,
 ) {
-    let player = player_position.single();
+    let player = player_query.single();
+    let (rod_entity, rod) = match rod_query.get_single() {
+        Ok((rod_entity, rod)) => (rod_entity, rod),
+        Err(_) => return,
+    };
 
-    if let Ok((rod_entity, rod)) = rod_position.get_single() {
-        // Despawn rod when it's reeled back in
-        if let Some(_) = collide(
-            player.translation,
-            player.scale.truncate(),
+    if collide(
+        player.translation,
+        player.scale.truncate(),
+        rod.translation,
+        rod.scale.truncate(),
+    )
+    .is_none()
+    {
+        return;
+    }
+
+    boat_collision_event.send_default();
+
+    for (fish, fish_state) in &fish_query {
+        match fish_state {
+            FishState::Caught => {
+                fish_collision_event.send(FishCollisionEvent {
+                    fish,
+                    entity: ThingsFishCanCollideWith::Boat,
+                });
+            }
+            FishState::Swimming => {}
+        }
+    }
+
+    // Despawn rod when it's reeled back in
+    commands.entity(rod_entity).despawn();
+}
+
+fn check_for_fish_collisions(
+    mut rod_query: Query<(&Transform, &mut RodState), With<Rod>>,
+    fish_query: Query<(Entity, &Transform), With<Fish>>,
+    mut collision_events: EventWriter<FishCollisionEvent>,
+) {
+    let (rod, mut state) = match rod_query.get_single_mut() {
+        Ok((rod, state)) => (rod, state),
+        Err(_) => return,
+    };
+
+    for (fish, fish_transform) in &fish_query {
+        if collide(
+            fish_transform.translation,
+            fish_transform.scale.truncate(),
             rod.translation,
             rod.scale.truncate(),
-        ) {
-            // Sends a collision event so that other systems can react to the collision
-            collision_events.send_default();
+        )
+        .is_none()
+        {
+            continue;
+        }
 
-            commands.entity(rod_entity).despawn();
+        match *state {
+            RodState::Idle => {
+                collision_events.send(FishCollisionEvent {
+                    fish,
+                    entity: ThingsFishCanCollideWith::Rod,
+                });
+                *state = RodState::Reeling;
+            }
+            RodState::Reeling => {}
         }
     }
 }
@@ -85,24 +149,26 @@ fn check_for_collisions(
 fn rod_movement(
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
-    mut rod_position: Query<&mut Transform, (With<Rod>, Without<Player>)>,
-    player_position: Query<&Transform, With<Player>>,
+    mut rod_query: Query<&mut Transform, (With<Rod>, Without<Player>)>,
+    player_query: Query<&Transform, With<Player>>,
 ) {
-    let player = player_position.single();
+    let player = player_query.single();
+    let mut transform = match rod_query.get_single_mut() {
+        Ok(transform) => transform,
+        Err(_) => return,
+    };
 
-    if let Ok(mut transform) = rod_position.get_single_mut() {
-        // Move rod up
-        if keyboard_input.just_pressed(KeyCode::Space) {
-            transform.translation.y += ROD_MOVEMENT_UP;
-        }
+    // Move rod up
+    if keyboard_input.just_pressed(KeyCode::Space) {
+        transform.translation.y += ROD_MOVEMENT_UP;
+    }
 
-        // Keep rod x aligned with player
-        transform.translation.x = player.translation.x;
+    // Keep rod x aligned with player
+    transform.translation.x = player.translation.x;
 
-        // Constantly move the rod downwards as long as it's above
-        // the length of the rod
-        if transform.translation.y > (0.0 - ROD_LENGTH) {
-            transform.translation.y -= 50.0 * time.delta_seconds();
-        }
+    // Constantly move the rod downwards as long as it's above
+    // the length of the rod
+    if transform.translation.y > (0.0 - ROD_LENGTH) {
+        transform.translation.y -= 50.0 * time.delta_seconds();
     }
 }

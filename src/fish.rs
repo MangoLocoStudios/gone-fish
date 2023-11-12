@@ -1,17 +1,12 @@
 use crate::{
     components::{Direction, FishStorage, Speed, Weight},
-    events::{BoatCollisionEvent, FishCollisionEvent, TrashCollisionEvent},
+    events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     player::Player,
     resources::FishStored,
     rod::Rod,
 };
 use bevy::prelude::*;
 use rand::{distributions::Standard, prelude::Distribution, Rng};
-
-pub enum ThingsFishCanCollideWith {
-    Boat,
-    Rod,
-}
 
 #[derive(Component, Clone, Copy, Debug)]
 pub enum FishVariant {
@@ -71,7 +66,15 @@ impl Plugin for FishPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<BoatCollisionEvent>()
             .add_systems(Startup, setup)
-            .add_systems(Update, (fish_movement, check_for_collisions));
+            .add_systems(
+                Update,
+                (
+                    fish_movement,
+                    check_for_rod_collisions,
+                    check_for_trash_collisions,
+                    check_for_boat_collisions,
+                ),
+            );
     }
 }
 
@@ -108,7 +111,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Que
             variant: rand::random(),
             weight: Weight {
                 // Round weight to .2 decimal places
-                current: (rand::thread_rng().gen_range(0.0..3.0) * 100.0_f32).round() / 100.0,
+                current: (rand::thread_rng().gen_range(0.1..3.0) * 100.0_f32).round() / 100.0,
             },
             ..default()
         });
@@ -167,25 +170,20 @@ pub fn fish_movement(
     }
 }
 
-pub fn check_for_collisions(
+pub fn check_for_boat_collisions(
     mut commands: Commands,
-    mut fish_collision_event: EventReader<FishCollisionEvent>,
-    mut trash_collision_event: EventReader<TrashCollisionEvent>,
+    mut boat_collision_event: EventReader<BoatCollisionEvent>,
     mut player_query: Query<&mut FishStorage, With<Player>>,
     mut fish_stored: ResMut<FishStored>,
     mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), With<Fish>>,
 ) {
     let mut fish_storage = player_query.single_mut();
 
-    // Check for collision with rod / boat
-    for ev in fish_collision_event.read() {
+    for _ in boat_collision_event.read() {
         for (fish, mut state, fish_variant, weight) in &mut fish_query {
-            if fish != ev.fish {
-                continue;
-            }
-
-            match ev.entity {
-                ThingsFishCanCollideWith::Boat => {
+            match *state {
+                FishState::Swimming => {}
+                FishState::Caught => {
                     if (weight.current + fish_storage.current) > fish_storage.max {
                         *state = FishState::Swimming;
 
@@ -196,7 +194,7 @@ pub fn check_for_collisions(
                     } else {
                         fish_storage.current += weight.current;
                         fish_stored.fish.push((*fish_variant, *weight));
-                        commands.entity(ev.fish).despawn();
+                        commands.entity(fish).despawn();
 
                         println!(
                             "[DEBUG] Fish caught {:?} - current weight {} - max weight {}",
@@ -204,14 +202,32 @@ pub fn check_for_collisions(
                         );
                     }
                 }
-                ThingsFishCanCollideWith::Rod => *state = FishState::Caught,
             }
         }
     }
+}
 
-    // Check for trash collision
+pub fn check_for_rod_collisions(
+    mut fish_collision_with_rod_event: EventReader<FishCollisionWithRodEvent>,
+    mut fish_query: Query<(Entity, &mut FishState), With<Fish>>,
+) {
+    for ev in fish_collision_with_rod_event.read() {
+        for (fish, mut state) in &mut fish_query {
+            if fish != ev.fish {
+                continue;
+            }
+
+            *state = FishState::Caught
+        }
+    }
+}
+
+pub fn check_for_trash_collisions(
+    mut trash_collision_event: EventReader<TrashCollisionEvent>,
+    mut fish_query: Query<&mut FishState, With<Fish>>,
+) {
     for _ in trash_collision_event.read() {
-        for (_, mut state, _, _) in &mut fish_query {
+        for mut state in &mut fish_query {
             match *state {
                 FishState::Swimming => {}
                 FishState::Caught => *state = FishState::Swimming,

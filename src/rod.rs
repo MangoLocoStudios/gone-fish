@@ -1,6 +1,6 @@
 use crate::{
-    events::{BoatCollisionEvent, FishCollisionEvent, TrashCollisionEvent},
-    fish::{Fish, FishState, ThingsFishCanCollideWith},
+    events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
+    fish::{Fish, FishState},
     player::Player,
     trash::Trash,
 };
@@ -21,7 +21,7 @@ impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<TrashCollisionEvent>()
             .add_event::<BoatCollisionEvent>()
-            .add_event::<FishCollisionEvent>()
+            .add_event::<FishCollisionWithRodEvent>()
             .add_systems(
                 Update,
                 (
@@ -77,7 +77,7 @@ fn check_for_boat_collisions(
     fish_query: Query<(Entity, &FishState), With<Fish>>,
     player_query: Query<&Transform, With<Player>>,
     mut boat_collision_event: EventWriter<BoatCollisionEvent>,
-    mut fish_collision_event: EventWriter<FishCollisionEvent>,
+    mut fish_collision_event: EventWriter<FishCollisionWithRodEvent>,
 ) {
     let player = player_query.single();
     let (rod_entity, rod) = match rod_query.get_single() {
@@ -101,10 +101,7 @@ fn check_for_boat_collisions(
     for (fish, fish_state) in &fish_query {
         match fish_state {
             FishState::Caught => {
-                fish_collision_event.send(FishCollisionEvent {
-                    fish,
-                    entity: ThingsFishCanCollideWith::Boat,
-                });
+                fish_collision_event.send(FishCollisionWithRodEvent { fish });
             }
             FishState::Swimming => {}
         }
@@ -117,7 +114,7 @@ fn check_for_boat_collisions(
 fn check_for_fish_collisions(
     mut rod_query: Query<(&Transform, &mut RodState), With<Rod>>,
     fish_query: Query<(Entity, &Transform), With<Fish>>,
-    mut collision_events: EventWriter<FishCollisionEvent>,
+    mut collision_events: EventWriter<FishCollisionWithRodEvent>,
 ) {
     let (rod, mut state) = match rod_query.get_single_mut() {
         Ok((rod, state)) => (rod, state),
@@ -138,10 +135,7 @@ fn check_for_fish_collisions(
 
         match *state {
             RodState::Idle => {
-                collision_events.send(FishCollisionEvent {
-                    fish,
-                    entity: ThingsFishCanCollideWith::Rod,
-                });
+                collision_events.send(FishCollisionWithRodEvent { fish });
                 *state = RodState::Reeling;
             }
             RodState::Reeling => {}

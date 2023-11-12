@@ -9,11 +9,6 @@ use bevy::prelude::*;
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 use std::slice::Iter;
 
-pub enum ThingsFishCanCollideWith {
-    Boat,
-    Rod,
-}
-
 #[derive(Component, Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum FishVariant {
     Trout,

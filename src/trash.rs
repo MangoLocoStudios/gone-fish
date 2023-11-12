@@ -46,6 +46,9 @@ impl Default for TrashBundle {
     }
 }
 
+const TRASH_SPEED_MIN: f32 = 150.;
+const TRASH_SPEED_MAX: f32 = 300.;
+
 pub struct TrashPlugin;
 
 impl Plugin for TrashPlugin {
@@ -79,7 +82,7 @@ pub fn setup(mut commands: Commands, window: Query<&mut Window>) {
                 ..default()
             },
             speed: Speed {
-                current: rand::thread_rng().gen_range(100.0..200.0),
+                current: rand::thread_rng().gen_range(TRASH_SPEED_MIN..TRASH_SPEED_MAX),
             },
             direction: Direction::random_y(),
             variant: rand::random(),

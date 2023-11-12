@@ -61,6 +61,12 @@ impl Default for FishBundle {
     }
 }
 
+const FISH_INVINCIBILITY_TIME: f32 = 1.;
+const FISH_SPEED_MIN: f32 = 150.;
+const FISH_SPEED_MAX: f32 = 300.;
+const FISH_WEIGHT_MIN: f32 = 0.1;
+const FISH_WEIGHT_MAX: f32 = 3.;
+
 pub struct FishPlugin;
 
 impl Plugin for FishPlugin {
@@ -109,12 +115,12 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Que
             },
             direction,
             speed: Speed {
-                current: rand::thread_rng().gen_range(150.0..300.0),
+                current: rand::thread_rng().gen_range(FISH_SPEED_MIN..FISH_SPEED_MAX),
             },
             variant: rand::random(),
             weight: Weight {
                 // Round weight to .2 decimal places
-                current: (rand::thread_rng().gen_range(0.1..3.0) * 100.0_f32).round() / 100.0,
+                current: (rand::thread_rng().gen_range(FISH_WEIGHT_MIN..FISH_WEIGHT_MAX) * 100.0_f32).round() / 100.0,
             },
             ..default()
         });
@@ -236,7 +242,7 @@ pub fn check_for_trash_collisions(
                 FishState::Swimming => {}
                 FishState::Caught => {
                     commands.entity(fish).insert(Invincibility {
-                        invincibility_timer: Timer::from_seconds(1.0, TimerMode::Once),
+                        invincibility_timer: Timer::from_seconds(FISH_INVINCIBILITY_TIME, TimerMode::Once),
                     });
                     *state = FishState::Swimming
                 }

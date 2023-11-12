@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 
 use crate::{
-    components::{Direction, FishStorage, Speed, Weight},
+    components::{Direction, FishStorage, Invincibility, Speed, Weight},
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     player::Player,
     resources::FishStored,
@@ -74,6 +74,7 @@ impl Plugin for FishPlugin {
                     check_for_rod_collisions,
                     check_for_trash_collisions,
                     check_for_boat_collisions,
+                    handle_invincibilities,
                 ),
             );
     }
@@ -210,7 +211,7 @@ pub fn check_for_boat_collisions(
 
 pub fn check_for_rod_collisions(
     mut fish_collision_with_rod_event: EventReader<FishCollisionWithRodEvent>,
-    mut fish_query: Query<(Entity, &mut FishState), With<Fish>>,
+    mut fish_query: Query<(Entity, &mut FishState), (With<Fish>, Without<Invincibility>)>,
 ) {
     for ev in fish_collision_with_rod_event.read() {
         for (fish, mut state) in &mut fish_query {
@@ -224,15 +225,33 @@ pub fn check_for_rod_collisions(
 }
 
 pub fn check_for_trash_collisions(
+    mut commands: Commands,
     mut trash_collision_event: EventReader<TrashCollisionEvent>,
-    mut fish_query: Query<&mut FishState, With<Fish>>,
+    mut fish_query: Query<(Entity, &mut FishState), With<Fish>>,
 ) {
     for _ in trash_collision_event.read() {
-        for mut state in &mut fish_query {
+        for (fish, mut state) in &mut fish_query {
             match *state {
                 FishState::Swimming => {}
-                FishState::Caught => *state = FishState::Swimming,
+                FishState::Caught => {
+                    commands.entity(fish).insert(Invincibility {
+                        invincibility_timer: Timer::from_seconds(1.0, TimerMode::Once),
+                    });
+                    *state = FishState::Swimming
+                }
             }
+        }
+    }
+}
+
+fn handle_invincibilities(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut Invincibility)>,
+    timer: Res<Time>,
+) {
+    for (e, mut i) in &mut query {
+        if i.invincibility_timer.tick(timer.delta()).finished() {
+            commands.entity(e).remove::<Invincibility>();
         }
     }
 }

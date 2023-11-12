@@ -49,3 +49,8 @@ impl FishStorage {
         }
     }
 }
+
+#[derive(Component)]
+pub struct Invincibility {
+    pub invincibility_timer: Timer,
+}

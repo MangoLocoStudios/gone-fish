@@ -1,9 +1,11 @@
-use crate::{
-    events::{BoatCollisionEvent, FishCollisionEvent},
-    fish::{Fish, FishState, ThingsFishCanCollideWith},
-    player::Player,
-};
 use bevy::{prelude::*, sprite::collide_aabb::collide};
+
+use crate::{
+    events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
+    fish::Fish,
+    player::Player,
+    trash::Trash,
+};
 
 #[derive(Component)]
 enum RodState {
@@ -18,17 +20,16 @@ pub struct RodPlugin;
 
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<BoatCollisionEvent>()
-            .add_event::<FishCollisionEvent>()
-            .add_systems(
-                Update,
-                (
-                    cast_rod,
-                    rod_movement,
-                    check_for_boat_collisions,
-                    check_for_fish_collisions,
-                ),
-            );
+        app.add_event::<BoatCollisionEvent>().add_systems(
+            Update,
+            (
+                cast_rod,
+                rod_movement,
+                check_for_boat_collisions,
+                check_for_fish_collisions,
+                check_for_trash_collisions,
+            ),
+        );
     }
 }
 
@@ -71,10 +72,8 @@ fn cast_rod(
 fn check_for_boat_collisions(
     mut commands: Commands,
     rod_query: Query<(Entity, &Transform), (With<Rod>, Without<Player>)>,
-    fish_query: Query<(Entity, &FishState), With<Fish>>,
     player_query: Query<&Transform, With<Player>>,
     mut boat_collision_event: EventWriter<BoatCollisionEvent>,
-    mut fish_collision_event: EventWriter<FishCollisionEvent>,
 ) {
     let player = player_query.single();
     let (rod_entity, rod) = match rod_query.get_single() {
@@ -95,18 +94,6 @@ fn check_for_boat_collisions(
 
     boat_collision_event.send_default();
 
-    for (fish, fish_state) in &fish_query {
-        match fish_state {
-            FishState::Caught => {
-                fish_collision_event.send(FishCollisionEvent {
-                    fish,
-                    entity: ThingsFishCanCollideWith::Boat,
-                });
-            }
-            FishState::Swimming => {}
-        }
-    }
-
     // Despawn rod when it's reeled back in
     commands.entity(rod_entity).despawn();
 }
@@ -114,7 +101,7 @@ fn check_for_boat_collisions(
 fn check_for_fish_collisions(
     mut rod_query: Query<(&Transform, &mut RodState), With<Rod>>,
     fish_query: Query<(Entity, &Transform), With<Fish>>,
-    mut collision_events: EventWriter<FishCollisionEvent>,
+    mut collision_events: EventWriter<FishCollisionWithRodEvent>,
 ) {
     let (rod, mut state) = match rod_query.get_single_mut() {
         Ok((rod, state)) => (rod, state),
@@ -135,13 +122,42 @@ fn check_for_fish_collisions(
 
         match *state {
             RodState::Idle => {
-                collision_events.send(FishCollisionEvent {
-                    fish,
-                    entity: ThingsFishCanCollideWith::Rod,
-                });
+                collision_events.send(FishCollisionWithRodEvent { fish });
                 *state = RodState::Reeling;
             }
             RodState::Reeling => {}
+        }
+    }
+}
+
+fn check_for_trash_collisions(
+    mut rod_query: Query<(&Transform, &mut RodState), With<Rod>>,
+    trash_query: Query<&Transform, With<Trash>>,
+    mut collision_events: EventWriter<TrashCollisionEvent>,
+) {
+    let (rod, mut state) = match rod_query.get_single_mut() {
+        Ok((rod, state)) => (rod, state),
+        Err(_) => return,
+    };
+
+    for trash_transform in &trash_query {
+        if collide(
+            trash_transform.translation,
+            trash_transform.scale.truncate(),
+            rod.translation,
+            rod.scale.truncate(),
+        )
+        .is_none()
+        {
+            continue;
+        }
+
+        match *state {
+            RodState::Idle => {}
+            RodState::Reeling => {
+                collision_events.send_default();
+                *state = RodState::Idle;
+            }
         }
     }
 }

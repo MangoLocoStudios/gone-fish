@@ -1,6 +1,7 @@
-use crate::{components::Weight, fish::FishVariant};
 use bevy::prelude::*;
 use std::collections::HashMap;
+
+use crate::{components::Weight, fish::FishVariant};
 
 #[derive(Resource, Default)]
 pub struct PlayerFishStored {

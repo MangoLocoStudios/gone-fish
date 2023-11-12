@@ -2,15 +2,17 @@ pub mod components;
 pub mod events;
 pub mod fish;
 pub mod player;
-mod port;
+pub mod port;
 pub mod resources;
 pub mod rod;
+pub mod trash;
 
 use crate::port::PortPlugin;
 use bevy::prelude::*;
 use fish::FishPlugin;
 use player::PlayerPlugin;
 use rod::RodPlugin;
+use trash::TrashPlugin;
 
 fn main() {
     App::new()
@@ -20,6 +22,7 @@ fn main() {
             RodPlugin,
             FishPlugin,
             PortPlugin,
+            TrashPlugin,
         ))
         .add_systems(Startup, setup)
         .run();

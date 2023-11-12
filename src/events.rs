@@ -16,5 +16,5 @@ pub struct TrashCollisionEvent;
 
 #[derive(Event)]
 pub struct PortCollisionEvent {
-    pub collision_direction: Collision
+    pub collision_direction: Collision,
 }

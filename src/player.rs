@@ -2,8 +2,7 @@ use crate::{
     components::FishStorage, events::PortCollisionEvent, port::Port, resources::PlayerFishStored,
 };
 use bevy::prelude::*;
-use bevy::reflect::erased_serde::__private::serde::de::Unexpected::Option;
-use bevy::sprite::collide_aabb::{collide, Collision};
+use bevy::sprite::collide_aabb::{collide};
 
 #[derive(Component)]
 pub struct Player;
@@ -41,7 +40,7 @@ pub fn setup(mut commands: Commands) {
 }
 
 fn player_movement(
-    mut event: EventReader<PortCollisionEvent>,
+    _event: EventReader<PortCollisionEvent>,
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
     window: Query<&mut Window>,
@@ -81,10 +80,9 @@ fn check_for_port_collisions(
         player.scale.truncate(),
         port.translation,
         port.scale.truncate(),
-    )
-    {
+    ) {
         port_collision_event.send(PortCollisionEvent {
-            collision_direction: collision
+            collision_direction: collision,
         });
     }
 }

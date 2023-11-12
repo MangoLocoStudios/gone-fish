@@ -2,7 +2,7 @@ use crate::{
     components::{Direction, FishStorage, Speed, Weight},
     events::{BoatCollisionEvent, FishCollisionEvent},
     player::Player,
-    resources::PlayerFishStored,
+    resources::{AliveFish, PlayerFishStored},
     rod::Rod,
 };
 use bevy::prelude::*;
@@ -79,8 +79,12 @@ pub struct FishPlugin;
 impl Plugin for FishPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<BoatCollisionEvent>()
+            .init_resource::<AliveFish>()
             .add_systems(Startup, setup)
-            .add_systems(Update, (fish_movement, check_for_collisions));
+            .add_systems(
+                Update,
+                (fish_movement, check_for_collisions, update_fish_count),
+            );
     }
 }
 
@@ -206,4 +210,18 @@ pub fn check_for_collisions(
             }
         }
     }
+}
+
+pub fn update_fish_count(
+    fish_query: Query<&Sprite, With<Fish>>,
+    mut alive_fish: ResMut<AliveFish>,
+) {
+    let fish_found = fish_query.iter().count() as u32;
+
+    if fish_found == alive_fish.count {
+        return;
+    }
+
+    alive_fish.count = fish_found;
+    println!("[DEBUG] Current fish count: {}", alive_fish.count);
 }

@@ -20,7 +20,7 @@ impl Plugin for PortPlugin {
     }
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Query<&mut Window>) {
+fn setup(mut commands: Commands, window: Query<&mut Window>) {
     let window = window.single();
     // From center of screen.
     let window_width = window.resolution.width() / 2.;
@@ -48,7 +48,7 @@ fn check_for_port_collisions(
     mut player_fish: ResMut<PlayerFishStored>,
     mut player_query: Query<&mut FishStorage, With<Player>>,
 ) {
-    if player_fish.fish.len() == 0 {
+    if player_fish.fish.is_empty() {
         return;
     }
 

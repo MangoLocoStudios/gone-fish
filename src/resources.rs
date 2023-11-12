@@ -7,6 +7,11 @@ pub struct PlayerFishStored {
     pub fish: Vec<(FishVariant, Weight)>,
 }
 
+#[derive(Resource, Default)]
+pub struct AliveFish {
+    pub count: u32,
+}
+
 #[derive(Resource)]
 pub struct PortStorage {
     pub weight: f32,
@@ -19,7 +24,7 @@ impl Default for PortStorage {
             weight: 0.,
             fish: FishVariant::iterator()
                 .map(|key| {
-                    return (key.clone(), 0);
+                    (*key, 0)
                 })
                 .collect(),
         }

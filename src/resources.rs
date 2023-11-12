@@ -6,3 +6,8 @@ use crate::{components::Weight, fish::FishVariant};
 pub struct FishStored {
     pub fish: Vec<(FishVariant, Weight)>,
 }
+
+#[derive(Resource, Default)]
+pub struct AliveFish {
+    pub count: u32,
+}

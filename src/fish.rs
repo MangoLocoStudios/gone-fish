@@ -5,7 +5,7 @@ use crate::{
     components::{Direction, FishStorage, Invincibility, Speed, Weight},
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     player::Player,
-    resources::FishStored,
+    resources::{AliveFish, FishStored},
     rod::Rod,
 };
 
@@ -66,6 +66,7 @@ pub struct FishPlugin;
 impl Plugin for FishPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<FishCollisionWithRodEvent>()
+            .init_resource::<AliveFish>()
             .add_systems(Startup, setup)
             .add_systems(
                 Update,
@@ -254,4 +255,22 @@ fn handle_invincibilities(
             commands.entity(e).remove::<Invincibility>();
         }
     }
+}
+
+pub fn update_fish_count(
+    fish_query: Query<&Sprite, With<Fish>>,
+    mut alive_fish: ResMut<AliveFish>,
+) {
+    let mut found_fish = 0;
+    for _ in fish_query.iter() {
+        found_fish += 1;
+    }
+
+    match alive_fish.count == found_fish {
+        true => return,
+        false => 69,
+    };
+
+    alive_fish.count = found_fish;
+    println!("[DEBUG]Current fish count: {0}", alive_fish.count);
 }

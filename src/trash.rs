@@ -1,6 +1,10 @@
-use crate::components::{Direction, Speed};
 use bevy::prelude::*;
 use rand::{distributions::Standard, prelude::Distribution, Rng};
+
+use crate::{
+    components::{Direction, Speed},
+    events::TrashCollisionEvent,
+};
 
 #[derive(Component, Clone, Copy, Debug)]
 pub enum TrashVariant {
@@ -46,7 +50,8 @@ pub struct TrashPlugin;
 
 impl Plugin for TrashPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
+        app.add_event::<TrashCollisionEvent>()
+            .add_systems(Startup, setup)
             .add_systems(Update, trash_movement);
     }
 }

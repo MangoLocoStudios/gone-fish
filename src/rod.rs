@@ -1,10 +1,11 @@
+use bevy::{prelude::*, sprite::collide_aabb::collide};
+
 use crate::{
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
-    fish::{Fish, FishState},
+    fish::Fish,
     player::Player,
     trash::Trash,
 };
-use bevy::{prelude::*, sprite::collide_aabb::collide};
 
 #[derive(Component)]
 enum RodState {
@@ -19,19 +20,16 @@ pub struct RodPlugin;
 
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<TrashCollisionEvent>()
-            .add_event::<BoatCollisionEvent>()
-            .add_event::<FishCollisionWithRodEvent>()
-            .add_systems(
-                Update,
-                (
-                    cast_rod,
-                    rod_movement,
-                    check_for_boat_collisions,
-                    check_for_fish_collisions,
-                    check_for_trash_collisions,
-                ),
-            );
+        app.add_event::<BoatCollisionEvent>().add_systems(
+            Update,
+            (
+                cast_rod,
+                rod_movement,
+                check_for_boat_collisions,
+                check_for_fish_collisions,
+                check_for_trash_collisions,
+            ),
+        );
     }
 }
 
@@ -74,10 +72,8 @@ fn cast_rod(
 fn check_for_boat_collisions(
     mut commands: Commands,
     rod_query: Query<(Entity, &Transform), (With<Rod>, Without<Player>)>,
-    fish_query: Query<(Entity, &FishState), With<Fish>>,
     player_query: Query<&Transform, With<Player>>,
     mut boat_collision_event: EventWriter<BoatCollisionEvent>,
-    mut fish_collision_event: EventWriter<FishCollisionWithRodEvent>,
 ) {
     let player = player_query.single();
     let (rod_entity, rod) = match rod_query.get_single() {
@@ -97,15 +93,6 @@ fn check_for_boat_collisions(
     }
 
     boat_collision_event.send_default();
-
-    for (fish, fish_state) in &fish_query {
-        match fish_state {
-            FishState::Caught => {
-                fish_collision_event.send(FishCollisionWithRodEvent { fish });
-            }
-            FishState::Swimming => {}
-        }
-    }
 
     // Despawn rod when it's reeled back in
     commands.entity(rod_entity).despawn();

@@ -1,3 +1,6 @@
+use bevy::prelude::*;
+use rand::{distributions::Standard, prelude::Distribution, Rng};
+
 use crate::{
     components::{Direction, FishStorage, Speed, Weight},
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
@@ -5,8 +8,6 @@ use crate::{
     resources::FishStored,
     rod::Rod,
 };
-use bevy::prelude::*;
-use rand::{distributions::Standard, prelude::Distribution, Rng};
 
 #[derive(Component, Clone, Copy, Debug)]
 pub enum FishVariant {
@@ -64,7 +65,7 @@ pub struct FishPlugin;
 
 impl Plugin for FishPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<BoatCollisionEvent>()
+        app.add_event::<FishCollisionWithRodEvent>()
             .add_systems(Startup, setup)
             .add_systems(
                 Update,

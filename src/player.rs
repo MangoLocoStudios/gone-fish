@@ -1,6 +1,8 @@
+use crate::{
+    components::FishStorage, events::PortCollisionEvent, port::Port, resources::PlayerFishStored,
+};
 use bevy::prelude::*;
-
-use crate::{components::FishStorage, resources::FishStored};
+use bevy::sprite::collide_aabb::collide;
 
 #[derive(Component)]
 pub struct Player;
@@ -9,9 +11,9 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<FishStored>()
+        app.init_resource::<PlayerFishStored>()
             .add_systems(Startup, setup)
-            .add_systems(Update, player_movement);
+            .add_systems(Update, (player_movement, check_for_port_collisions));
     }
 }
 
@@ -38,6 +40,7 @@ pub fn setup(mut commands: Commands) {
 }
 
 fn player_movement(
+    _event: EventReader<PortCollisionEvent>,
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
     window: Query<&mut Window>,
@@ -61,5 +64,25 @@ fn player_movement(
         && keyboard_input.pressed(KeyCode::Right)
     {
         transform.translation.x += 150. * time.delta_seconds();
+    }
+}
+
+fn check_for_port_collisions(
+    mut player_query: Query<&Transform, With<Player>>,
+    mut port_query: Query<&Transform, With<Port>>,
+    mut port_collision_event: EventWriter<PortCollisionEvent>,
+) {
+    let player = player_query.single_mut();
+    let port = port_query.single_mut();
+
+    if let Some(collision) = collide(
+        player.translation,
+        player.scale.truncate(),
+        port.translation,
+        port.scale.truncate(),
+    ) {
+        port_collision_event.send(PortCollisionEvent {
+            collision_direction: collision,
+        });
     }
 }

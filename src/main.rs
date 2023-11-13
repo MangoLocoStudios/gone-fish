@@ -2,10 +2,12 @@ pub mod components;
 pub mod events;
 pub mod fish;
 pub mod player;
+pub mod port;
 pub mod resources;
 pub mod rod;
 pub mod trash;
 
+use crate::port::PortPlugin;
 use bevy::prelude::*;
 use fish::FishPlugin;
 use player::PlayerPlugin;
@@ -19,6 +21,7 @@ fn main() {
             PlayerPlugin,
             RodPlugin,
             FishPlugin,
+            PortPlugin,
             TrashPlugin,
         ))
         .add_systems(Startup, setup)

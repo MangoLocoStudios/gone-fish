@@ -12,7 +12,7 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     let top = vec3(0.447, 0.529, 0.835);
     let bottom = vec3(0.027,0.047,0.310);
 
-    let gradient = mix(top, bottom, (uv.y + 1.) / 2.);
+    let gradient = mix(bottom, top, (uv.y + 1.) / 2.);
 
     return vec4f(gradient, 1.0);
 }    

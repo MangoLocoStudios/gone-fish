@@ -107,6 +107,8 @@ impl Plugin for FishPlugin {
             .add_systems(
                 Update,
                 (
+                    update_fish_count,
+                    spawn_fish,
                     fish_movement,
                     check_for_rod_collisions,
                     check_for_trash_collisions,
@@ -304,16 +306,66 @@ fn handle_invincibilities(
     }
 }
 
+pub fn spawn_fish(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    alive_fish: Res<AliveFish>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    if alive_fish.count > 10 {
+        return;
+    }
+
+    let vertical_position = rand::thread_rng().gen_range(100.0..500.);
+    let horizontal_position = rand::thread_rng().gen_range(-1800.0..1800.);
+    let direction = Direction::random_y();
+    let fish: FishVariant = rand::random();
+
+    commands.spawn({
+        let (texture_atlas, animation_indices) = fish.texture_atlas(asset_server.clone());
+        let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+        (
+            FishBundle {
+                sprite_sheet: SpriteSheetBundle {
+                    texture_atlas: texture_atlas_handle,
+                    sprite: TextureAtlasSprite {
+                        index: animation_indices.first,
+                        flip_x: matches!(direction, Direction::Left),
+                        ..default()
+                    },
+                    transform: Transform {
+                        translation: Vec3::new(horizontal_position, -vertical_position, 5.),
+                        scale: Vec3::splat(3.),
+                        ..default()
+                    },
+                    ..default()
+                },
+                direction,
+                speed: Speed {
+                    current: rand::thread_rng().gen_range(FISH_SPEED_MIN..FISH_SPEED_MAX),
+                },
+                variant: fish,
+                weight: Weight {
+                    // Round weight to .2 decimal places
+                    current: (rand::thread_rng().gen_range(FISH_WEIGHT_MIN..FISH_WEIGHT_MAX)
+                        * 100.0_f32)
+                        .round()
+                        / 100.0,
+                },
+                ..default()
+            },
+            animation_indices,
+            AnimationTimer(Timer::from_seconds(0.2, TimerMode::Repeating)),
+        )
+    });
+}
+
 pub fn update_fish_count(
-    fish_query: Query<&Sprite, With<Fish>>,
+    fish_query: Query<&Fish>,
     mut alive_fish: ResMut<AliveFish>,
 ) {
     let fish_found = fish_query.iter().count() as u32;
 
-    if fish_found == alive_fish.count {
-        return;
-    }
-
     alive_fish.count = fish_found;
-    println!("[DEBUG] Current fish count: {}", alive_fish.count);
 }

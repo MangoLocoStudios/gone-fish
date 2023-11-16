@@ -3,6 +3,7 @@ use crate::{
     events::PortCollisionEvent,
     player::Player,
     resources::{PlayerFishStored, PortStorage},
+    GameState::Game,
 };
 use bevy::prelude::*;
 
@@ -15,8 +16,8 @@ impl Plugin for PortPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PortStorage>()
             .add_event::<PortCollisionEvent>()
-            .add_systems(Startup, setup)
-            .add_systems(Update, check_for_port_collisions);
+            .add_systems(OnEnter(Game), setup)
+            .add_systems(Update, check_for_port_collisions.run_if(in_state(Game)));
     }
 }
 

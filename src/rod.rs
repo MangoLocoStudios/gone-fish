@@ -5,6 +5,7 @@ use crate::{
     fish::Fish,
     player::Player,
     trash::Trash,
+    GameState::Game,
 };
 
 #[derive(Component)]
@@ -28,7 +29,8 @@ impl Plugin for RodPlugin {
                 check_for_boat_collisions,
                 check_for_fish_collisions,
                 check_for_trash_collisions,
-            ),
+            )
+                .run_if(in_state(Game)),
         );
     }
 }

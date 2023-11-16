@@ -10,7 +10,7 @@ pub struct Weight {
     pub current: f32,
 }
 
-#[derive(Component)]
+#[derive(Component, Clone, Copy)]
 pub enum Direction {
     Left,
     Right,
@@ -30,6 +30,15 @@ impl Direction {
         match rand::random::<bool>() {
             true => Self::Up,
             false => Self::Down,
+        }
+    }
+
+    pub fn opposite(self) -> Self {
+        match self {
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
+            Direction::Up => Direction::Down,
+            Direction::Down => Direction::Up,
         }
     }
 }
@@ -54,3 +63,12 @@ impl FishStorage {
 pub struct Invincibility {
     pub invincibility_timer: Timer,
 }
+
+#[derive(Component)]
+pub struct AnimationIndices {
+    pub first: usize,
+    pub last: usize,
+}
+
+#[derive(Component, Deref, DerefMut)]
+pub struct AnimationTimer(pub(crate) Timer);

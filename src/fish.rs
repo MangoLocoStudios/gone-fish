@@ -1,5 +1,7 @@
 use crate::{
-    components::{Direction, FishStorage, Invincibility, Speed, Weight},
+    components::{
+        AnimationIndices, AnimationTimer, Direction, FishStorage, Invincibility, Speed, Weight,
+    },
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     player::Player,
     resources::{AliveFish, PlayerFishStored},
@@ -22,6 +24,26 @@ impl FishVariant {
             [FishVariant::Trout, FishVariant::Tuna, FishVariant::Salmon];
         FISH_VARIANTS.iter()
     }
+
+    pub fn texture_atlas(self, asset_server: AssetServer) -> (TextureAtlas, AnimationIndices) {
+        (
+            match self {
+                FishVariant::Trout => {
+                    let texture_handle = asset_server.load("craftpixel/objects/Catch/1.png");
+                    TextureAtlas::from_grid(texture_handle, Vec2::new(12., 6.), 2, 1, None, None)
+                }
+                FishVariant::Tuna => {
+                    let texture_handle = asset_server.load("craftpixel/objects/Catch/2.png");
+                    TextureAtlas::from_grid(texture_handle, Vec2::new(16., 12.), 2, 1, None, None)
+                }
+                FishVariant::Salmon => {
+                    let texture_handle = asset_server.load("craftpixel/objects/Catch/3.png");
+                    TextureAtlas::from_grid(texture_handle, Vec2::new(20., 12.), 2, 1, None, None)
+                }
+            },
+            AnimationIndices { first: 0, last: 1 },
+        )
+    }
 }
 
 impl Distribution<FishVariant> for Standard {
@@ -34,7 +56,7 @@ impl Distribution<FishVariant> for Standard {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub enum FishState {
     Swimming,
     Caught,
@@ -51,8 +73,7 @@ struct FishBundle {
     weight: Weight,
     state: FishState,
     variant: FishVariant,
-    // This might change to a SpriteSheetBundle eventually.
-    sprite: SpriteBundle,
+    sprite_sheet: SpriteSheetBundle,
 }
 
 impl Default for FishBundle {
@@ -64,14 +85,14 @@ impl Default for FishBundle {
             weight: Weight { current: 0.1 },
             state: FishState::Swimming,
             variant: FishVariant::Tuna,
-            sprite: Default::default(),
+            sprite_sheet: Default::default(),
         }
     }
 }
 
 const FISH_INVINCIBILITY_TIME: f32 = 1.;
 const FISH_SPEED_MIN: f32 = 150.;
-const FISH_SPEED_MAX: f32 = 300.;
+const FISH_SPEED_MAX: f32 = 250.;
 const FISH_WEIGHT_MIN: f32 = 0.1;
 const FISH_WEIGHT_MAX: f32 = 3.;
 
@@ -95,56 +116,64 @@ impl Plugin for FishPlugin {
     }
 }
 
-pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Query<&mut Window>) {
-    // From center of screen.
-    let window = window.single();
-    let window_width = window.resolution.width() / 2.;
-
-    for _ in 0..5 {
-        let vertical_position = rand::random::<f32>() * -400. + 20.;
-        let horizontal_position = rand::random::<f32>() * window_width + 20.;
+pub fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    for _ in 0..20 {
+        let vertical_position = rand::thread_rng().gen_range(100.0..400.);
+        let horizontal_position = rand::thread_rng().gen_range(-1800.0..1800.);
         let direction = Direction::random_y();
+        let fish: FishVariant = rand::random();
 
-        commands.spawn(FishBundle {
-            sprite: SpriteBundle {
-                texture: asset_server.load("fish4.png"),
-                transform: Transform {
-                    translation: Vec3::new(horizontal_position, vertical_position, 0.0),
-                    scale: Vec3::new(0.5, 0.5, 0.5),
+        commands.spawn({
+            let (texture_atlas, animation_indices) = fish.texture_atlas(asset_server.clone());
+            let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+            (
+                FishBundle {
+                    sprite_sheet: SpriteSheetBundle {
+                        texture_atlas: texture_atlas_handle,
+                        sprite: TextureAtlasSprite {
+                            index: animation_indices.first,
+                            flip_x: matches!(direction, Direction::Left),
+                            ..default()
+                        },
+                        transform: Transform {
+                            translation: Vec3::new(horizontal_position, -vertical_position, 5.),
+                            scale: Vec3::splat(3.),
+                            ..default()
+                        },
+                        ..default()
+                    },
+                    direction,
+                    speed: Speed {
+                        current: rand::thread_rng().gen_range(FISH_SPEED_MIN..FISH_SPEED_MAX),
+                    },
+                    variant: fish,
+                    weight: Weight {
+                        // Round weight to .2 decimal places
+                        current: (rand::thread_rng().gen_range(FISH_WEIGHT_MIN..FISH_WEIGHT_MAX)
+                            * 100.0_f32)
+                            .round()
+                            / 100.0,
+                    },
                     ..default()
                 },
-                sprite: Sprite {
-                    // Sprite is facing left, we must flip it if it is going
-                    // right.
-                    flip_x: matches!(direction, Direction::Right),
-                    ..default()
-                },
-                ..default()
-            },
-            direction,
-            speed: Speed {
-                current: rand::thread_rng().gen_range(FISH_SPEED_MIN..FISH_SPEED_MAX),
-            },
-            variant: rand::random(),
-            weight: Weight {
-                // Round weight to .2 decimal places
-                current: (rand::thread_rng().gen_range(FISH_WEIGHT_MIN..FISH_WEIGHT_MAX)
-                    * 100.0_f32)
-                    .round()
-                    / 100.0,
-            },
-            ..default()
+                animation_indices,
+                AnimationTimer(Timer::from_seconds(0.2, TimerMode::Repeating)),
+            )
         });
     }
 }
 
 pub fn fish_movement(
     time: Res<Time>,
-    window: Query<&mut Window>,
     rod_query: Query<&Transform, (With<Rod>, Without<Fish>)>,
     mut fish_query: Query<
         (
-            &mut Sprite,
+            &mut TextureAtlasSprite,
             &mut Transform,
             &mut Direction,
             &Speed,
@@ -153,10 +182,6 @@ pub fn fish_movement(
         With<Fish>,
     >,
 ) {
-    // From center of screen.
-    let window = window.single();
-    let window_width = window.resolution.width() / 2.;
-
     for (mut fish, mut transform, mut direction, speed, state) in &mut fish_query {
         match state {
             FishState::Swimming => {
@@ -172,12 +197,12 @@ pub fn fish_movement(
                 }
 
                 // Flip the thing when at edge
-                if transform.translation.x < -window_width {
+                if transform.translation.x < -1800. {
                     *direction = Direction::Right;
-                    fish.flip_x = true;
-                } else if transform.translation.x > window_width {
-                    *direction = Direction::Left;
                     fish.flip_x = false;
+                } else if transform.translation.x > 1800. {
+                    *direction = Direction::Left;
+                    fish.flip_x = true;
                 }
             }
             FishState::Caught => {

@@ -3,7 +3,7 @@ use bevy::{prelude::*, sprite::collide_aabb::collide};
 use crate::{
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     fish::Fish,
-    player::Player,
+    player::{Boat, Player},
     trash::Trash,
 };
 
@@ -33,7 +33,7 @@ impl Plugin for RodPlugin {
     }
 }
 
-const ROD_LENGTH: f32 = 200.0;
+const ROD_LENGTH: f32 = 700.0;
 const ROD_MOVEMENT_UP: f32 = 20.0;
 
 fn cast_rod(
@@ -59,8 +59,8 @@ fn cast_rod(
                     ..default()
                 },
                 transform: Transform {
-                    translation: Vec3::new(player.translation.x, -5.0, 0.0),
-                    scale: Vec3::new(40.0, 40.0, 0.0),
+                    translation: Vec3::new(player.translation.x, -50., 10.),
+                    scale: Vec3::new(20., 20., 0.),
                     ..default()
                 },
                 ..default()
@@ -73,17 +73,28 @@ fn check_for_boat_collisions(
     mut commands: Commands,
     rod_query: Query<(Entity, &Transform), (With<Rod>, Without<Player>)>,
     player_query: Query<&Transform, With<Player>>,
+    boat_query: Query<(&Transform, &Handle<Image>), With<Boat>>,
     mut boat_collision_event: EventWriter<BoatCollisionEvent>,
+    assets: Res<Assets<Image>>,
 ) {
     let player = player_query.single();
+    let (boat, image) = boat_query.single();
+
     let (rod_entity, rod) = match rod_query.get_single() {
         Ok((rod_entity, rod)) => (rod_entity, rod),
         Err(_) => return,
     };
 
     if collide(
-        player.translation,
-        player.scale.truncate(),
+        // Child (boat) position is relative to parent (player) so we must
+        // combine their translations to get the boats world translation
+        player.translation + boat.translation,
+        assets
+            .get(image)
+            .expect("boat to always have an available image")
+            .size()
+            .as_vec2()
+            * boat.scale.truncate(),
         rod.translation,
         rod.scale.truncate(),
     )

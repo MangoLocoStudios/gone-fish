@@ -86,6 +86,8 @@ impl Plugin for FishPlugin {
             .add_systems(
                 Update,
                 (
+                    update_fish_count,
+                    spawn_fish,
                     fish_movement,
                     check_for_rod_collisions,
                     check_for_trash_collisions,
@@ -279,6 +281,55 @@ fn handle_invincibilities(
     }
 }
 
+pub fn spawn_fish(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    window: Query<&mut Window>,
+    alive_fish: Res<AliveFish>,
+) {
+    if alive_fish.count > 10 {
+        return;
+    }
+
+    // From center of screen.
+    let window = window.single();
+    let window_width = window.resolution.width() / 2.;
+
+    let vertical_position = rand::random::<f32>() * -400. + 20.;
+    let horizontal_position = rand::random::<f32>() * window_width + 20.;
+    let direction = Direction::random_y();
+
+    commands.spawn(FishBundle {
+        sprite: SpriteBundle {
+            texture: asset_server.load("fish4.png"),
+            transform: Transform {
+                translation: Vec3::new(horizontal_position, vertical_position, 0.0),
+                scale: Vec3::new(0.5, 0.5, 0.5),
+                ..default()
+            },
+            sprite: Sprite {
+                // Sprite is facing left, we must flip it if it is going
+                // right.
+                flip_x: matches!(direction, Direction::Right),
+                ..default()
+            },
+            ..default()
+        },
+        direction,
+        speed: Speed {
+            current: rand::thread_rng().gen_range(FISH_SPEED_MIN..FISH_SPEED_MAX),
+        },
+        variant: rand::random(),
+        weight: Weight {
+            // Round weight to .2 decimal places
+            current: (rand::thread_rng().gen_range(FISH_WEIGHT_MIN..FISH_WEIGHT_MAX) * 100.0_f32)
+                .round()
+                / 100.0,
+        },
+        ..default()
+    });
+}
+
 pub fn update_fish_count(
     fish_query: Query<&Sprite, With<Fish>>,
     mut alive_fish: ResMut<AliveFish>,
@@ -290,5 +341,4 @@ pub fn update_fish_count(
     }
 
     alive_fish.count = fish_found;
-    println!("[DEBUG] Current fish count: {}", alive_fish.count);
 }

@@ -4,6 +4,7 @@ use rand::{distributions::Standard, prelude::Distribution, Rng};
 use crate::{
     components::{Direction, Speed},
     events::TrashCollisionEvent,
+    GameState::Game,
 };
 
 #[derive(Component, Clone, Copy, Debug)]
@@ -54,8 +55,8 @@ pub struct TrashPlugin;
 impl Plugin for TrashPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<TrashCollisionEvent>()
-            .add_systems(Startup, setup)
-            .add_systems(Update, trash_movement);
+            .add_systems(OnEnter(Game), setup)
+            .add_systems(Update, trash_movement.run_if(in_state(Game)));
     }
 }
 

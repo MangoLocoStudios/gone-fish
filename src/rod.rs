@@ -33,7 +33,7 @@ impl Plugin for RodPlugin {
                     check_for_fish_collisions,
                     check_for_trash_collisions,
                 )
-                .run_if(in_state(Game)),
+                    .run_if(in_state(Game)),
             );
     }
 }

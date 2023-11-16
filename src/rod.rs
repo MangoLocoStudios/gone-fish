@@ -5,6 +5,7 @@ use crate::{
     fish::Fish,
     player::Player,
     trash::Trash,
+    resources::RodProperties,
 };
 
 #[derive(Component)]
@@ -20,7 +21,9 @@ pub struct RodPlugin;
 
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<BoatCollisionEvent>().add_systems(
+        app.init_resource::<RodProperties>()
+            .add_event::<BoatCollisionEvent>()
+            .add_systems(
             Update,
             (
                 cast_rod,
@@ -33,8 +36,8 @@ impl Plugin for RodPlugin {
     }
 }
 
-const ROD_LENGTH: f32 = 200.0;
-const ROD_MOVEMENT_UP: f32 = 20.0;
+const ROD_MOVEMENT_DOWN: f32 = 75.0;
+
 
 fn cast_rod(
     mut commands: Commands,
@@ -165,6 +168,7 @@ fn check_for_trash_collisions(
 fn rod_movement(
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
+    rod_properties: Res<RodProperties>,
     mut rod_query: Query<&mut Transform, (With<Rod>, Without<Player>)>,
     player_query: Query<&Transform, With<Player>>,
 ) {
@@ -176,7 +180,7 @@ fn rod_movement(
 
     // Move rod up
     if keyboard_input.just_pressed(KeyCode::Space) {
-        transform.translation.y += ROD_MOVEMENT_UP;
+        transform.translation.y += rod_properties.pull;
     }
 
     // Keep rod x aligned with player
@@ -184,7 +188,7 @@ fn rod_movement(
 
     // Constantly move the rod downwards as long as it's above
     // the length of the rod
-    if transform.translation.y > (0.0 - ROD_LENGTH) {
-        transform.translation.y -= 50.0 * time.delta_seconds();
+    if transform.translation.y > (0.0 - rod_properties.length) {
+        transform.translation.y -= ROD_MOVEMENT_DOWN * time.delta_seconds();
     }
 }

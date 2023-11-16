@@ -5,6 +5,8 @@ use crate::{
     resources::{PlayerFishStored, PortStorage},
 };
 use bevy::prelude::*;
+use std::option::Option;
+use crate::resources::RodProperties;
 
 #[derive(Component)]
 pub struct Port;
@@ -45,6 +47,7 @@ fn setup(mut commands: Commands, window: Query<&mut Window>) {
 fn check_for_port_collisions(
     mut event: EventReader<PortCollisionEvent>,
     mut port_fish: ResMut<PortStorage>,
+    mut rod_props: ResMut<RodProperties>,
     mut player_fish: ResMut<PlayerFishStored>,
     mut player_query: Query<&mut FishStorage, With<Player>>,
 ) {
@@ -64,9 +67,22 @@ fn check_for_port_collisions(
         let mut player_storage = player_query.single_mut();
         port_fish.weight += player_storage.current;
 
-        FishStorage::update_storage(0., None, &mut player_storage);
+        let mut new_max: Option<f32> = None;
 
         // Trigger Upgrades
-        // 10kg of fish - Rod upgrade
+        if port_fish.weight > 2. && !port_fish.weight_two {
+            rod_props.length += 200.;
+            rod_props.pull += 30.;
+            new_max = Some(6.);
+            port_fish.weight_two = true;
+        }
+
+        if port_fish.weight > 5. && !port_fish.weight_five {
+            rod_props.pull += 50.;
+            new_max = Some(10.);
+            port_fish.weight_five = true;
+        }
+
+        FishStorage::update_storage(0., new_max, &mut player_storage);
     }
 }

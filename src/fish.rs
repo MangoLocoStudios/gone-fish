@@ -91,7 +91,8 @@ impl Plugin for FishPlugin {
                     check_for_trash_collisions,
                     check_for_boat_collisions,
                     handle_invincibilities,
-                ).run_if(in_state(Game)),
+                )
+                    .run_if(in_state(Game)),
             );
     }
 }

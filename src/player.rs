@@ -14,7 +14,10 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerFishStored>()
             .add_systems(OnEnter(Game), setup)
-            .add_systems(Update, (player_movement, check_for_port_collisions).run_if(in_state(Game)));
+            .add_systems(
+                Update,
+                (player_movement, check_for_port_collisions).run_if(in_state(Game)),
+            );
     }
 }
 

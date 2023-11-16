@@ -124,7 +124,7 @@ pub fn setup(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     for _ in 0..20 {
-        let vertical_position = rand::thread_rng().gen_range(100.0..400.);
+        let vertical_position = rand::thread_rng().gen_range(100.0..500.);
         let horizontal_position = rand::thread_rng().gen_range(-1800.0..1800.);
         let direction = Direction::random_y();
         let fish: FishVariant = rand::random();

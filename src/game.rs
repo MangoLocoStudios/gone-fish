@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{despawn_screen, GameState, Volume};
+use super::{despawn_screen, GameState};
 use crate::{
     fish::FishPlugin, player::PlayerPlugin, port::PortPlugin, rod::RodPlugin, trash::TrashPlugin,
 };
@@ -19,4 +19,4 @@ impl Plugin for GamePlugin {
 #[derive(Component)]
 struct OnGameScreen;
 
-fn game_setup(_volume: Res<Volume>) {}
+fn game_setup() {}

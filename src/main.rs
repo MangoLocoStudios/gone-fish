@@ -17,9 +17,6 @@ use splash::SplashPlugin;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
-#[derive(Resource, Debug, Component, PartialEq, Eq, Clone, Copy)]
-struct Volume(u32);
-
 #[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]
 enum GameState {
     #[default]
@@ -33,7 +30,6 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_state::<GameState>()
         .add_systems(Startup, setup)
-        .insert_resource(Volume(7))
         .add_plugins((SplashPlugin, MenuPlugin, GamePlugin))
         .run();
 }

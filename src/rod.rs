@@ -4,8 +4,8 @@ use crate::{
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     fish::Fish,
     player::Player,
-    trash::Trash,
     resources::RodProperties,
+    trash::Trash,
 };
 
 #[derive(Component)]
@@ -24,20 +24,19 @@ impl Plugin for RodPlugin {
         app.init_resource::<RodProperties>()
             .add_event::<BoatCollisionEvent>()
             .add_systems(
-            Update,
-            (
-                cast_rod,
-                rod_movement,
-                check_for_boat_collisions,
-                check_for_fish_collisions,
-                check_for_trash_collisions,
-            ),
-        );
+                Update,
+                (
+                    cast_rod,
+                    rod_movement,
+                    check_for_boat_collisions,
+                    check_for_fish_collisions,
+                    check_for_trash_collisions,
+                ),
+            );
     }
 }
 
 const ROD_MOVEMENT_DOWN: f32 = 75.0;
-
 
 fn cast_rod(
     mut commands: Commands,

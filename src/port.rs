@@ -2,11 +2,10 @@ use crate::{
     components::FishStorage,
     events::PortCollisionEvent,
     player::Player,
-    resources::{PlayerFishStored, PortStorage},
+    resources::{PlayerFishStored, PortStorage, RodProperties},
 };
 use bevy::prelude::*;
 use std::option::Option;
-use crate::resources::RodProperties;
 
 #[derive(Component)]
 pub struct Port;

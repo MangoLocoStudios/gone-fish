@@ -28,7 +28,7 @@ impl Default for PortStorage {
             weight: 0.,
             fish: FishVariant::iterator().map(|key| (*key, 0)).collect(),
             weight_two: false,
-            weight_five: false
+            weight_five: false,
         }
     }
 }
@@ -36,7 +36,7 @@ impl Default for PortStorage {
 #[derive(Resource)]
 pub struct RodProperties {
     pub length: f32,
-    pub pull: f32
+    pub pull: f32,
 }
 
 impl Default for RodProperties {

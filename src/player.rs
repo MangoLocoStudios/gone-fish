@@ -1,5 +1,6 @@
 use crate::{
     components::FishStorage, events::PortCollisionEvent, port::Port, resources::PlayerFishStored,
+    GameState::Game,
 };
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
@@ -12,8 +13,11 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerFishStored>()
-            .add_systems(Startup, setup)
-            .add_systems(Update, (player_movement, check_for_port_collisions));
+            .add_systems(OnEnter(Game), setup)
+            .add_systems(
+                Update,
+                (player_movement, check_for_port_collisions).run_if(in_state(Game)),
+            );
     }
 }
 

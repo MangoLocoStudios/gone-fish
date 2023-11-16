@@ -4,6 +4,7 @@ use crate::{
     player::Player,
     resources::{AliveFish, PlayerFishStored},
     rod::Rod,
+    GameState::Game,
 };
 use bevy::prelude::*;
 use rand::{distributions::Standard, prelude::Distribution, Rng};
@@ -81,7 +82,7 @@ impl Plugin for FishPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<FishCollisionWithRodEvent>()
             .init_resource::<AliveFish>()
-            .add_systems(Startup, setup)
+            .add_systems(OnEnter(Game), setup)
             .add_systems(
                 Update,
                 (
@@ -90,7 +91,8 @@ impl Plugin for FishPlugin {
                     check_for_trash_collisions,
                     check_for_boat_collisions,
                     handle_invincibilities,
-                ),
+                )
+                    .run_if(in_state(Game)),
             );
     }
 }

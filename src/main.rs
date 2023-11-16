@@ -1,6 +1,8 @@
 pub mod components;
 pub mod events;
 pub mod fish;
+pub mod game;
+pub mod menu;
 pub mod player;
 pub mod port;
 pub mod resources;
@@ -8,17 +10,27 @@ pub mod rod;
 pub mod systems;
 pub mod trash;
 
-use crate::port::PortPlugin;
+use crate::components::{AnimationIndices, AnimationTimer};
+use crate::game::GamePlugin;
+use crate::menu::MenuPlugin;
+use crate::port::Port;
+use crate::rod::Rod;
+use crate::systems::animate_sprite;
+use crate::GameState::Game;
 use bevy::{prelude::*, window::WindowTheme};
-use components::{AnimationIndices, AnimationTimer};
-use fish::FishPlugin;
-use player::PlayerPlugin;
-use port::Port;
-use rod::{Rod, RodPlugin};
-use trash::TrashPlugin;
+
+const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
+
+#[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]
+enum GameState {
+    #[default]
+    Menu,
+    Game,
+}
 
 fn main() {
     App::new()
+        .add_state::<GameState>()
         .add_plugins((
             DefaultPlugins
                 .build()
@@ -37,14 +49,11 @@ fn main() {
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
-            PlayerPlugin,
-            RodPlugin,
-            FishPlugin,
-            PortPlugin,
-            TrashPlugin,
+            MenuPlugin,
+            GamePlugin,
         ))
         .add_systems(Startup, setup)
-        .add_systems(Update, camera)
+        .add_systems(Update, (camera.run_if(in_state(Game)), animate_sprite))
         .run();
 }
 
@@ -52,18 +61,31 @@ fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    window: Query<&mut Window>,
 ) {
+    let window = window.single();
+    // From center of screen.
+    let window_width = window.resolution.width() / 2.;
+
     commands.spawn(Camera2dBundle::default());
 
-    // Water
+    // Sky
     commands.spawn(SpriteBundle {
-        sprite: Sprite {
-            color: Color::hex("#7287D5").expect("is a valid colour."),
+        texture: asset_server.load("craftpix/clouds/clouds_7/1.png"),
+        transform: Transform {
+            translation: Vec3::new(0., 0., -20.),
+            scale: Vec3::splat(7.),
             ..default()
         },
+        ..default()
+    });
+
+    // Border barrel
+    commands.spawn(SpriteBundle {
+        texture: asset_server.load("craftpix/objects/Fishbarrel3.png"),
         transform: Transform {
-            translation: Vec3::new(0., -550., 0.),
-            scale: Vec3::new(5000., 1000., 0.),
+            translation: Vec3::new(window_width + 200., -40., 0.),
+            scale: Vec3::splat(2.),
             ..default()
         },
         ..default()
@@ -95,6 +117,20 @@ fn setup(
 
         initial += 48.;
     }
+
+    // Water
+    commands.spawn(SpriteBundle {
+        sprite: Sprite {
+            color: Color::hex("#7287D5").expect("is a valid colour."),
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(0., -550., 0.),
+            scale: Vec3::new(5000., 1000., 0.),
+            ..default()
+        },
+        ..default()
+    });
 }
 
 fn camera(
@@ -107,4 +143,10 @@ fn camera(
     let diff = port.translation.x - camera_transform.translation.x;
     camera.scale = (diff.abs() / 1000.) + 0.5;
     camera.scale = camera.scale.clamp(0.5, 3.);
+}
+
+fn despawn_screen<T: Component>(to_despawn: Query<Entity, With<T>>, mut commands: Commands) {
+    for entity in &to_despawn {
+        commands.entity(entity).despawn_recursive();
+    }
 }

@@ -3,7 +3,7 @@ use crate::{
     events::PortCollisionEvent,
     port::Port,
     resources::PlayerFishStored,
-    systems::animate_sprite,
+    GameState::Game,
 };
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
@@ -27,15 +27,15 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerFishStored>()
-            .add_systems(Startup, setup)
+            .add_systems(OnEnter(Game), setup)
             .add_systems(
                 Update,
                 (
                     player_movement,
                     check_for_port_collisions,
-                    animate_sprite,
                     // handle_animation_states,
-                ),
+                )
+                    .run_if(in_state(Game)),
             );
     }
 }
@@ -49,7 +49,7 @@ pub fn setup(
         .spawn((
             Boat,
             SpriteBundle {
-                texture: asset_server.load("craftpixel/objects/Boat.png"),
+                texture: asset_server.load("craftpix/objects/Boat.png"),
                 transform: Transform {
                     translation: Vec3::new(13., -10., -1.),
                     // scale: Vec3::new(100.0, 50.0, 0.0),
@@ -62,7 +62,7 @@ pub fn setup(
 
     let player = commands
         .spawn({
-            let texture_handle = asset_server.load("craftpixel/fisherman/Fisherman_row.png");
+            let texture_handle = asset_server.load("craftpix/fisherman/Fisherman_row.png");
             let texture_atlas =
                 TextureAtlas::from_grid(texture_handle, Vec2::new(48., 48.), 4, 1, None, None);
             let texture_atlas_handle = texture_atlases.add(texture_atlas);

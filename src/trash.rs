@@ -4,6 +4,7 @@ use rand::{distributions::Standard, prelude::Distribution, Rng};
 use crate::{
     components::{Direction, Speed},
     events::TrashCollisionEvent,
+    GameState::Game,
 };
 
 #[derive(Component, Clone, Copy, Debug)]
@@ -15,8 +16,8 @@ pub enum TrashVariant {
 impl TrashVariant {
     pub fn image(self, asset_server: AssetServer) -> Handle<Image> {
         match self {
-            TrashVariant::Newspaper => asset_server.load("craftpixel/objects/Catch/Box.png"),
-            TrashVariant::OldShoe => asset_server.load("craftpixel/objects/Catch/Barrel.png"),
+            TrashVariant::Newspaper => asset_server.load("craftpix/objects/Catch/Box.png"),
+            TrashVariant::OldShoe => asset_server.load("craftpix/objects/Catch/Barrel.png"),
         }
     }
 }
@@ -63,8 +64,8 @@ pub struct TrashPlugin;
 impl Plugin for TrashPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<TrashCollisionEvent>()
-            .add_systems(Startup, setup)
-            .add_systems(Update, trash_movement);
+            .add_systems(OnEnter(Game), setup)
+            .add_systems(Update, trash_movement.run_if(in_state(Game)));
     }
 }
 

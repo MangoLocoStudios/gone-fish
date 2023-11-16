@@ -99,21 +99,17 @@ impl Plugin for FishPlugin {
     }
 }
 
-pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, window: Query<&mut Window>) {
-    // From center of screen.
-    let window = window.single();
-    let window_width = window.resolution.width() / 2.;
-
+pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     for _ in 0..5 {
-        let vertical_position = rand::random::<f32>() * -400. + 20.;
-        let horizontal_position = rand::random::<f32>() * window_width + 20.;
+        let vertical_position = rand::thread_rng().gen_range(100.0..500.);
+        let horizontal_position = rand::thread_rng().gen_range(-1800.0..1800.);
         let direction = Direction::random_y();
 
         commands.spawn(FishBundle {
             sprite: SpriteBundle {
                 texture: asset_server.load("fish4.png"),
                 transform: Transform {
-                    translation: Vec3::new(horizontal_position, vertical_position, 0.0),
+                    translation: Vec3::new(horizontal_position, -vertical_position, 0.0),
                     scale: Vec3::new(0.5, 0.5, 0.5),
                     ..default()
                 },
@@ -284,26 +280,21 @@ fn handle_invincibilities(
 pub fn spawn_fish(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    window: Query<&mut Window>,
     alive_fish: Res<AliveFish>,
 ) {
     if alive_fish.count > 10 {
         return;
     }
 
-    // From center of screen.
-    let window = window.single();
-    let window_width = window.resolution.width() / 2.;
-
-    let vertical_position = rand::random::<f32>() * -400. + 20.;
-    let horizontal_position = rand::random::<f32>() * window_width + 20.;
+    let vertical_position = rand::thread_rng().gen_range(100.0..500.);
+    let horizontal_position = rand::thread_rng().gen_range(-1800.0..1800.);
     let direction = Direction::random_y();
 
     commands.spawn(FishBundle {
         sprite: SpriteBundle {
             texture: asset_server.load("fish4.png"),
             transform: Transform {
-                translation: Vec3::new(horizontal_position, vertical_position, 0.0),
+                translation: Vec3::new(horizontal_position, -vertical_position, 0.0),
                 scale: Vec3::new(0.5, 0.5, 0.5),
                 ..default()
             },

@@ -33,18 +33,19 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     };
 
     // UI Canvas
-    commands.spawn(NodeBundle {
-        style: Style {
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
+    commands
+        .spawn(NodeBundle {
+            style: Style {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                ..default()
+            },
             ..default()
-        },
-        ..default()
-    })
+        })
         // Fish Storage
         .with_children(|parent| {
-            parent.spawn(
-                NodeBundle {
+            parent
+                .spawn(NodeBundle {
                     style: Style {
                         width: Val::Percent(25.),
                         padding: UiRect::all(Val::Px(25.)),
@@ -52,31 +53,29 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                         ..default()
                     },
                     ..default()
-                }
-            )
+                })
                 .with_children(|parent| {
-                    parent
-                        .spawn((
-                            ImageBundle {
-                                style: Style {
-                                    width: Val::Px(40.0),
-                                    height: Val::Px(40.0),
-                                    ..default()
-                                },
-                                image: UiImage::new(asset_server.load("craftpix/icons/Icons_16.png")),
+                    parent.spawn((
+                        ImageBundle {
+                            style: Style {
+                                width: Val::Px(40.0),
+                                height: Val::Px(40.0),
                                 ..default()
                             },
-                            StorageIcon
-                        ));
+                            image: UiImage::new(asset_server.load("craftpix/icons/Icons_16.png")),
+                            ..default()
+                        },
+                        StorageIcon,
+                    ));
 
-                   parent.spawn((
-                       // Create a TextBundle that has a Text with a list of sections.
-                       TextBundle::from_sections([
-                           TextSection::from_style(ui_text_style.clone()),
-                           TextSection::from_style(ui_text_style.clone()),
-                       ]),
-                       StorageText,
-                   ));
+                    parent.spawn((
+                        // Create a TextBundle that has a Text with a list of sections.
+                        TextBundle::from_sections([
+                            TextSection::from_style(ui_text_style.clone()),
+                            TextSection::from_style(ui_text_style.clone()),
+                        ]),
+                        StorageText,
+                    ));
                 });
         });
 }

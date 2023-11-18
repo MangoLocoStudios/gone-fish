@@ -1,7 +1,7 @@
 use crate::{
     components::{
-        AnimationIndices, AnimationTimer, CanDie, Direction, FishStorage, Invincibility, Speed,
-        Weight,
+        AnimationIndices, AnimationTimer, CanDie, DecayTimer, Direction, FishStorage,
+        Invincibility, Speed, Weight,
     },
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     player::Player,
@@ -77,6 +77,7 @@ struct FishBundle {
     variant: FishVariant,
     sprite_sheet: SpriteSheetBundle,
     can_die: CanDie,
+    decay_timer: DecayTimer,
 }
 
 impl Default for FishBundle {
@@ -90,6 +91,7 @@ impl Default for FishBundle {
             variant: FishVariant::Tuna,
             can_die: CanDie { dying: false },
             sprite_sheet: Default::default(),
+            decay_timer: Default::default(),
         }
     }
 }
@@ -228,6 +230,14 @@ pub fn fish_boundary(
         } else if transform.translation.x > 1800. {
             *direction = Direction::Left;
             fish.flip_x = true;
+        }
+    }
+}
+
+pub fn die_the_fish(mut fishicide_query: Query<(&DecayTimer, &mut CanDie), With<Fish>>) {
+    for (timer, mut can_die) in &mut fishicide_query {
+        if timer.timer.finished() {
+            can_die.dying = true;
         }
     }
 }

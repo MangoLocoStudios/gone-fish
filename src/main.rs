@@ -18,6 +18,7 @@ use crate::rod::Rod;
 use crate::systems::animate_sprite;
 use crate::GameState::Game;
 use bevy::{prelude::*, window::WindowTheme};
+use systems::tick_decay_timers;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
@@ -54,6 +55,7 @@ fn main() {
         ))
         .add_systems(Startup, setup)
         .add_systems(Update, (camera.run_if(in_state(Game)), animate_sprite))
+        .add_systems(Update, (camera.run_if(in_state(Game)), tick_decay_timers))
         .run();
 }
 

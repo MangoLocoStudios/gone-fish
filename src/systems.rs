@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::components::{AnimationIndices, AnimationTimer};
+use crate::components::{AnimationIndices, AnimationTimer, DecayTimer};
 
 pub fn animate_sprite(
     time: Res<Time>,
@@ -19,5 +19,11 @@ pub fn animate_sprite(
                 sprite.index + 1
             };
         }
+    }
+}
+
+pub fn tick_decay_timers(mut can_die_query: Query<&mut DecayTimer>, timer: ResMut<Time>) {
+    for mut decay_timer in can_die_query.iter_mut() {
+        decay_timer.timer.tick(timer.delta());
     }
 }

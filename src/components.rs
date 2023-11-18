@@ -77,3 +77,16 @@ pub struct AnimationTimer(pub(crate) Timer);
 pub struct CanDie {
     pub dying: bool,
 }
+
+#[derive(Component)]
+pub struct DecayTimer {
+    pub timer: Timer,
+}
+
+impl Default for DecayTimer {
+    fn default() -> Self {
+        DecayTimer {
+            timer: Timer::from_seconds(10., TimerMode::Once),
+        }
+    }
+}

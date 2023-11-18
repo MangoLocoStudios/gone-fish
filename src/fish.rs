@@ -1,6 +1,7 @@
 use crate::{
     components::{
-        AnimationIndices, AnimationTimer, Direction, FishStorage, Invincibility, Speed, Weight,
+        AnimationIndices, AnimationTimer, CanDie, Direction, FishStorage, Invincibility, Speed,
+        Weight,
     },
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     player::Player,
@@ -75,6 +76,7 @@ struct FishBundle {
     state: FishState,
     variant: FishVariant,
     sprite_sheet: SpriteSheetBundle,
+    can_die: CanDie,
 }
 
 impl Default for FishBundle {
@@ -86,6 +88,7 @@ impl Default for FishBundle {
             weight: Weight { current: 0.1 },
             state: FishState::Swimming,
             variant: FishVariant::Tuna,
+            can_die: CanDie { dying: false },
             sprite_sheet: Default::default(),
         }
     }
@@ -110,6 +113,8 @@ impl Plugin for FishPlugin {
                     update_fish_count,
                     spawn_fish,
                     fish_movement,
+                    fish_boundary,
+                    cull_fish,
                     check_for_rod_collisions,
                     check_for_trash_collisions,
                     check_for_boat_collisions,
@@ -175,18 +180,9 @@ pub fn setup(
 pub fn fish_movement(
     time: Res<Time>,
     rod_query: Query<&Transform, (With<Rod>, Without<Fish>)>,
-    mut fish_query: Query<
-        (
-            &mut TextureAtlasSprite,
-            &mut Transform,
-            &mut Direction,
-            &Speed,
-            &FishState,
-        ),
-        With<Fish>,
-    >,
+    mut fish_query: Query<(&mut Transform, &mut Direction, &Speed, &FishState), With<Fish>>,
 ) {
-    for (mut fish, mut transform, mut direction, speed, state) in &mut fish_query {
+    for (mut transform, direction, speed, state) in &mut fish_query {
         match state {
             FishState::Swimming => {
                 // Move the thing
@@ -199,15 +195,6 @@ pub fn fish_movement(
                     }
                     _ => {}
                 }
-
-                // Flip the thing when at edge
-                if transform.translation.x < -1800. {
-                    *direction = Direction::Right;
-                    fish.flip_x = false;
-                } else if transform.translation.x > 1800. {
-                    *direction = Direction::Left;
-                    fish.flip_x = true;
-                }
             }
             FishState::Caught => {
                 if let Ok(rod) = rod_query.get_single() {
@@ -215,6 +202,45 @@ pub fn fish_movement(
                     transform.translation.y = rod.translation.y;
                 }
             }
+        }
+    }
+}
+
+pub fn fish_boundary(
+    mut fish_query: Query<
+        (
+            &mut TextureAtlasSprite,
+            &mut Transform,
+            &mut Direction,
+            &CanDie,
+        ),
+        With<Fish>,
+    >,
+) {
+    for (mut fish, transform, mut direction, can_die) in &mut fish_query {
+        if can_die.dying {
+            return;
+        }
+        // Flip the thing when at edge
+        if transform.translation.x < -1800. {
+            *direction = Direction::Right;
+            fish.flip_x = false;
+        } else if transform.translation.x > 1800. {
+            *direction = Direction::Left;
+            fish.flip_x = true;
+        }
+    }
+}
+
+pub fn cull_fish(
+    mut commands: Commands,
+    mut fish_query: Query<(Entity, &CanDie, &Transform), With<Fish>>,
+) {
+    for (fish, can_die, &transform) in &mut fish_query {
+        let fish_out_of_bounds =
+            transform.translation.x > 1800. || transform.translation.x < -1800.;
+        if can_die.dying && fish_out_of_bounds {
+            commands.entity(fish).despawn();
         }
     }
 }

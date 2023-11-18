@@ -8,6 +8,7 @@ pub mod port;
 pub mod resources;
 pub mod rod;
 pub mod trash;
+mod ui;
 
 use bevy::prelude::*;
 use game::GamePlugin;

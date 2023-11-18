@@ -106,7 +106,6 @@ fn main_menu_setup(mut commands: Commands) {
                         align_items: AlignItems::Center,
                         ..default()
                     },
-                    background_color: Color::SEA_GREEN.into(),
                     ..default()
                 })
                 .with_children(|parent| {

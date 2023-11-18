@@ -13,11 +13,20 @@ pub enum TrashVariant {
     OldShoe,
 }
 
+impl TrashVariant {
+    pub fn image(self, asset_server: AssetServer) -> Handle<Image> {
+        match self {
+            TrashVariant::Newspaper => asset_server.load("craftpix/objects/Catch/Box.png"),
+            TrashVariant::OldShoe => asset_server.load("craftpix/objects/Catch/Barrel.png"),
+        }
+    }
+}
+
 impl Distribution<TrashVariant> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TrashVariant {
-        match rng.gen_range(0..1) {
-            0 => TrashVariant::OldShoe,
-            _ => TrashVariant::Newspaper,
+        match rng.gen_range(0..2) {
+            0 => TrashVariant::Newspaper,
+            _ => TrashVariant::OldShoe,
         }
     }
 }
@@ -60,25 +69,19 @@ impl Plugin for TrashPlugin {
     }
 }
 
-pub fn setup(mut commands: Commands, window: Query<&mut Window>) {
-    // From center of screen.
-    let window = window.single();
-    let window_width = window.resolution.width() / 2.;
-
-    for _ in 0..5 {
-        let vertical_position = rand::random::<f32>() * -400. + 20.;
-        let horizontal_position = rand::random::<f32>() * window_width + 20.;
+pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    for _ in 0..10 {
+        let vertical_position = rand::thread_rng().gen_range(50.0..400.);
+        let horizontal_position = rand::thread_rng().gen_range(-1800.0..1800.);
+        let trash: TrashVariant = rand::random();
 
         commands.spawn(TrashBundle {
             sprite: SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgb(0.75, 0.25, 0.25),
-                    ..default()
-                },
+                texture: trash.image(asset_server.clone()),
                 transform: Transform {
-                    translation: Vec3::new(horizontal_position, vertical_position, 0.0),
-                    scale: Vec3::new(40., 40., 40.),
-                    ..default()
+                    translation: Vec3::new(horizontal_position, -vertical_position, 5.0),
+                    scale: Vec3::splat(3.),
+                    rotation: Quat::from_rotation_z(rand::thread_rng().gen_range(0.0..360.)),
                 },
                 ..default()
             },
@@ -86,7 +89,7 @@ pub fn setup(mut commands: Commands, window: Query<&mut Window>) {
                 current: rand::thread_rng().gen_range(TRASH_SPEED_MIN..TRASH_SPEED_MAX),
             },
             direction: Direction::random_y(),
-            variant: rand::random(),
+            variant: trash,
             ..default()
         });
     }
@@ -94,13 +97,8 @@ pub fn setup(mut commands: Commands, window: Query<&mut Window>) {
 
 pub fn trash_movement(
     time: Res<Time>,
-    window: Query<&mut Window>,
     mut trash_query: Query<(&mut Transform, &mut Direction, &Speed), With<Trash>>,
 ) {
-    // From center of screen.
-    let window = window.single();
-    let window_width = window.resolution.width() / 2.;
-
     for (mut transform, mut direction, speed) in &mut trash_query {
         // Move the thing
         match *direction {
@@ -114,9 +112,9 @@ pub fn trash_movement(
         }
 
         // Flip the thing when at edge
-        if transform.translation.x < -window_width {
+        if transform.translation.x < 1800. {
             *direction = Direction::Right;
-        } else if transform.translation.x > window_width {
+        } else if transform.translation.x > 1800. {
             *direction = Direction::Left;
         }
     }

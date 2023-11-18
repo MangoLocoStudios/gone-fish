@@ -116,6 +116,7 @@ impl Plugin for FishPlugin {
                     spawn_fish,
                     fish_movement,
                     fish_boundary,
+                    die_the_fish,
                     cull_fish,
                     check_for_rod_collisions,
                     check_for_trash_collisions,
@@ -236,7 +237,7 @@ pub fn fish_boundary(
 
 pub fn die_the_fish(mut fishicide_query: Query<(&DecayTimer, &mut CanDie), With<Fish>>) {
     for (timer, mut can_die) in &mut fishicide_query {
-        if timer.timer.finished() {
+        if timer.timer.finished() && !can_die.dying {
             can_die.dying = true;
         }
     }
@@ -348,7 +349,7 @@ pub fn spawn_fish(
     alive_fish: Res<AliveFish>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    if alive_fish.count > 10 {
+    if alive_fish.count > 20 {
         return;
     }
 

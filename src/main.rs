@@ -9,6 +9,7 @@ pub mod resources;
 pub mod rod;
 pub mod systems;
 pub mod trash;
+mod ui;
 
 use crate::components::{AnimationIndices, AnimationTimer};
 use crate::game::GamePlugin;
@@ -16,6 +17,7 @@ use crate::menu::MenuPlugin;
 use crate::port::Port;
 use crate::rod::Rod;
 use crate::systems::animate_sprite;
+use crate::ui::UIPlugin;
 use crate::GameState::Game;
 use bevy::{prelude::*, window::WindowTheme};
 use systems::tick_decay_timers;
@@ -52,6 +54,7 @@ fn main() {
                 .set(ImagePlugin::default_nearest()),
             MenuPlugin,
             GamePlugin,
+            UIPlugin,
         ))
         .add_systems(Startup, setup)
         .add_systems(Update, (camera.run_if(in_state(Game)), animate_sprite))

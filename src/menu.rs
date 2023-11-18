@@ -68,7 +68,7 @@ fn menu_setup(mut menu_state: ResMut<NextState<MenuState>>) {
     menu_state.set(MenuState::Main);
 }
 
-fn main_menu_setup(mut commands: Commands) {
+fn main_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Common style for all buttons on the screen
     let button_style = Style {
         width: Val::Px(250.0),
@@ -79,9 +79,9 @@ fn main_menu_setup(mut commands: Commands) {
         ..default()
     };
     let button_text_style = TextStyle {
+        font: asset_server.load("fonts/Pixellari.ttf"),
         font_size: 40.0,
         color: TEXT_COLOR,
-        ..default()
     };
 
     commands
@@ -114,9 +114,9 @@ fn main_menu_setup(mut commands: Commands) {
                         TextBundle::from_section(
                             "Gone Fish",
                             TextStyle {
+                                font: asset_server.load("fonts/Pixellari.ttf"),
                                 font_size: 80.0,
                                 color: TEXT_COLOR,
-                                ..default()
                             },
                         )
                         .with_style(Style {

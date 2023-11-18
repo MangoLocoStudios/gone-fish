@@ -2,10 +2,11 @@ use crate::{
     components::FishStorage,
     events::PortCollisionEvent,
     player::Player,
-    resources::{PlayerFishStored, PortStorage},
+    resources::{PlayerFishStored, PortStorage, RodProperties},
     GameState::Game,
 };
 use bevy::prelude::*;
+use std::option::Option;
 
 #[derive(Component)]
 pub struct Port;
@@ -16,12 +17,12 @@ impl Plugin for PortPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PortStorage>()
             .add_event::<PortCollisionEvent>()
-            .add_systems(OnEnter(Game), setup)
+            .add_systems(Startup, setup)
             .add_systems(Update, check_for_port_collisions.run_if(in_state(Game)));
     }
 }
 
-fn setup(mut commands: Commands, window: Query<&mut Window>) {
+fn setup(mut commands: Commands, window: Query<&mut Window>, asset_server: Res<AssetServer>) {
     let window = window.single();
     // From center of screen.
     let window_width = window.resolution.width() / 2.;
@@ -29,23 +30,31 @@ fn setup(mut commands: Commands, window: Query<&mut Window>) {
     commands.spawn((
         Port,
         SpriteBundle {
-            sprite: Sprite {
-                color: Color::rgb(0.25, 0.75, 0.0),
-                ..default()
-            },
+            texture: asset_server.load("craftpix/objects/Fishing_hut.png"),
             transform: Transform {
-                translation: Vec3::new(-window_width + 100., 50.0, 0.0),
-                scale: Vec3::new(200., 200., 0.0),
+                translation: Vec3::new(-window_width, 0., -10.),
+                scale: Vec3::splat(3.),
                 ..default()
             },
             ..default()
         },
     ));
+
+    commands.spawn((SpriteBundle {
+        texture: asset_server.load("craftpix/objects/Fishbarrel2.png"),
+        transform: Transform {
+            translation: Vec3::new(-window_width + 150., 17., -9.),
+            scale: Vec3::splat(3.),
+            ..default()
+        },
+        ..default()
+    },));
 }
 
 fn check_for_port_collisions(
     mut event: EventReader<PortCollisionEvent>,
     mut port_fish: ResMut<PortStorage>,
+    mut rod_props: ResMut<RodProperties>,
     mut player_fish: ResMut<PlayerFishStored>,
     mut player_query: Query<&mut FishStorage, With<Player>>,
 ) {
@@ -54,6 +63,7 @@ fn check_for_port_collisions(
     }
 
     for _ in event.read() {
+        println!("[DEBUG] Depositing fish");
         for fish in &player_fish.fish {
             if let Some(count) = port_fish.fish.get_mut(&fish.0) {
                 *count += 1;
@@ -65,9 +75,23 @@ fn check_for_port_collisions(
         let mut player_storage = player_query.single_mut();
         port_fish.weight += player_storage.current;
 
-        FishStorage::update_storage(0., None, &mut player_storage);
+        player_storage.current = 0.;
+        let mut new_max: Option<f32> = None;
 
         // Trigger Upgrades
-        // 10kg of fish - Rod upgrade
+        if port_fish.weight > 2. && !port_fish.weight_two {
+            rod_props.length += 200.;
+            rod_props.pull += 30.;
+            new_max = Some(6.);
+            port_fish.weight_two = true;
+        }
+
+        if port_fish.weight > 5. && !port_fish.weight_five {
+            rod_props.pull += 50.;
+            new_max = Some(10.);
+            port_fish.weight_five = true;
+        }
+
+        FishStorage::update_storage(0., new_max, &mut player_storage);
     }
 }

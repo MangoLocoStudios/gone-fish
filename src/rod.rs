@@ -192,7 +192,7 @@ fn rod_movement(
 
     // Move rod up
     if keyboard_input.just_pressed(KeyCode::Space) {
-        transform.translation.y += rod_properties.pull;
+        transform.translation.y += rod_properties.pull * time.delta_seconds();
     }
 
     // Keep rod x aligned with player

@@ -76,7 +76,7 @@ struct FishBundle {
     state: FishState,
     variant: FishVariant,
     sprite_sheet: SpriteSheetBundle,
-    can_dy: CanDie,
+    can_die: CanDie,
 }
 
 impl Default for FishBundle {
@@ -88,7 +88,7 @@ impl Default for FishBundle {
             weight: Weight { current: 0.1 },
             state: FishState::Swimming,
             variant: FishVariant::Tuna,
-            can_dy: CanDie { dying: false },
+            can_die: CanDie { dying: false },
             sprite_sheet: Default::default(),
         }
     }

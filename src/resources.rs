@@ -43,7 +43,7 @@ impl Default for RodProperties {
     fn default() -> Self {
         Self {
             length: 200.,
-            pull: 1000.,
+            pull: 25.,
         }
     }
 }

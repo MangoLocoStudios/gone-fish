@@ -87,8 +87,8 @@ pub struct DecayTimer {
 impl Default for DecayTimer {
     fn default() -> Self {
         let time_to_death = rand::thread_rng().gen_range(30. ..120.);
-        return DecayTimer {
+        DecayTimer {
             timer: Timer::from_seconds(time_to_death, TimerMode::Once),
-        };
+        }
     }
 }

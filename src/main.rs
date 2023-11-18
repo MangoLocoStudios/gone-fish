@@ -7,12 +7,8 @@ pub mod player;
 pub mod port;
 pub mod resources;
 pub mod rod;
-pub mod shaders;
 pub mod systems;
 pub mod trash;
-
-#[allow(unused_imports)] // TODO: Remove this once shaders are implemented
-use bevy::sprite::MaterialMesh2dBundle;
 
 use crate::components::{AnimationIndices, AnimationTimer};
 use crate::game::GamePlugin;
@@ -21,9 +17,7 @@ use crate::port::Port;
 use crate::rod::Rod;
 use crate::systems::animate_sprite;
 use crate::GameState::Game;
-use bevy::sprite::Material2dPlugin;
 use bevy::{prelude::*, window::WindowTheme};
-use shaders::GradientMaterial;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
@@ -57,7 +51,6 @@ fn main() {
                 .set(ImagePlugin::default_nearest()),
             MenuPlugin,
             GamePlugin,
-            Material2dPlugin::<GradientMaterial>::default(),
         ))
         .add_systems(Startup, setup)
         .add_systems(Update, (camera.run_if(in_state(Game)), animate_sprite))
@@ -68,9 +61,7 @@ fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut _shader: ResMut<Assets<GradientMaterial>>, // TODO: Remove '_' once shaders are implemented
     window: Query<&mut Window>,
-    mut _meshes: ResMut<Assets<Mesh>>, // TODO: Remove '_' once shaders are implemented
 ) {
     let window = window.single();
     // From center of screen.
@@ -140,44 +131,6 @@ fn setup(
         },
         ..default()
     });
-
-    // Water shader
-    // commands.spawn(MaterialMesh2dBundle {
-    //     mesh: meshes
-    //         .add(
-    //             shape::Quad {
-    //                 size: Vec2::new(5000., 655.),
-    //                 ..Default::default()
-    //             }
-    //             .into(),
-    //         )
-    //         .into(),
-    //     transform: Transform {
-    //         translation: Vec3::new(0., -397., 0.),
-    //         ..default()
-    //     },
-    //     material: shader.add(GradientMaterial {}),
-    //     ..default()
-    // });
-
-    // Test shader square
-    // commands.spawn(MaterialMesh2dBundle {
-    //     mesh: meshes
-    //         .add(
-    //             shape::Quad {
-    //                 size: Vec2::new(300., 300.),
-    //                 ..Default::default()
-    //             }
-    //             .into(),
-    //         )
-    //         .into(),
-    //     transform: Transform {
-    //         translation: Vec3::new(200., 0., 40.),
-    //         ..default()
-    //     },
-    //     material: shader.add(GradientMaterial {}),
-    //     ..default()
-    // });
 }
 
 fn camera(

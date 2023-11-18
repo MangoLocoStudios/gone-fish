@@ -17,6 +17,7 @@ use crate::menu::MenuPlugin;
 use crate::port::Port;
 use crate::rod::Rod;
 use crate::systems::animate_sprite;
+use crate::ui::UIPlugin;
 use crate::GameState::Game;
 use bevy::{prelude::*, window::WindowTheme};
 
@@ -52,6 +53,7 @@ fn main() {
                 .set(ImagePlugin::default_nearest()),
             MenuPlugin,
             GamePlugin,
+            UIPlugin,
         ))
         .add_systems(Startup, setup)
         .add_systems(Update, (camera.run_if(in_state(Game)), animate_sprite))

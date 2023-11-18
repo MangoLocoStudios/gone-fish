@@ -72,3 +72,8 @@ pub struct AnimationIndices {
 
 #[derive(Component, Deref, DerefMut)]
 pub struct AnimationTimer(pub(crate) Timer);
+
+#[derive(Component)]
+pub struct CanDie {
+    pub dying: bool,
+}

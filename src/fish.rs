@@ -1,6 +1,7 @@
 use crate::{
     components::{
-        AnimationIndices, AnimationTimer, Direction, FishStorage, Invincibility, Speed, Weight,
+        AnimationIndices, AnimationTimer, CanDie, Direction, FishStorage, Invincibility, Speed,
+        Weight,
     },
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     player::Player,
@@ -75,6 +76,7 @@ struct FishBundle {
     state: FishState,
     variant: FishVariant,
     sprite_sheet: SpriteSheetBundle,
+    can_dy: CanDie,
 }
 
 impl Default for FishBundle {
@@ -86,6 +88,7 @@ impl Default for FishBundle {
             weight: Weight { current: 0.1 },
             state: FishState::Swimming,
             variant: FishVariant::Tuna,
+            can_dy: CanDie { dying: false },
             sprite_sheet: Default::default(),
         }
     }
@@ -111,6 +114,7 @@ impl Plugin for FishPlugin {
                     spawn_fish,
                     fish_movement,
                     fish_boundary,
+                    cull_fish,
                     check_for_rod_collisions,
                     check_for_trash_collisions,
                     check_for_boat_collisions,
@@ -203,16 +207,37 @@ pub fn fish_movement(
 }
 
 pub fn fish_boundary(
-    mut fish_query: Query<(&mut TextureAtlasSprite, &mut Transform, &mut Direction), With<Fish>>,
+    mut fish_query: Query<
+        (
+            &mut TextureAtlasSprite,
+            &mut Transform,
+            &mut Direction,
+            &CanDie,
+        ),
+        With<Fish>,
+    >,
 ) {
-    for (mut fish, transform, mut direction) in &mut fish_query {
+    for (mut fish, transform, mut direction, can_die) in &mut fish_query {
         // Flip the thing when at edge
-        if transform.translation.x < -1800. {
+        if transform.translation.x < -1800. && !can_die.dying {
             *direction = Direction::Right;
             fish.flip_x = false;
-        } else if transform.translation.x > 1800. {
+        } else if transform.translation.x > 1800. && !can_die.dying {
             *direction = Direction::Left;
             fish.flip_x = true;
+        }
+    }
+}
+
+pub fn cull_fish(
+    mut commands: Commands,
+    mut fish_query: Query<(Entity, &CanDie, &Transform), With<Fish>>,
+) {
+    for (fish, can_die, &transform) in &mut fish_query {
+        let fish_out_of_bounds =
+            transform.translation.x > 1800. || transform.translation.x < -1800.;
+        if can_die.dying && fish_out_of_bounds {
+            commands.entity(fish).despawn();
         }
     }
 }

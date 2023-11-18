@@ -1,7 +1,7 @@
 use crate::{
     components::{
-        AnimationIndices, AnimationTimer, CanDie, Direction, FishStorage, Invincibility, Speed,
-        Weight,
+        AnimationIndices, AnimationTimer, CanDie, DecayTimer, Direction, FishStorage,
+        Invincibility, Speed, Weight,
     },
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     player::Player,
@@ -77,6 +77,7 @@ struct FishBundle {
     variant: FishVariant,
     sprite_sheet: SpriteSheetBundle,
     can_die: CanDie,
+    decay_timer: DecayTimer,
 }
 
 impl Default for FishBundle {
@@ -90,6 +91,7 @@ impl Default for FishBundle {
             variant: FishVariant::Tuna,
             can_die: CanDie { dying: false },
             sprite_sheet: Default::default(),
+            decay_timer: Default::default(),
         }
     }
 }
@@ -114,6 +116,7 @@ impl Plugin for FishPlugin {
                     spawn_fish,
                     fish_movement,
                     fish_boundary,
+                    die_the_fish,
                     cull_fish,
                     check_for_rod_collisions,
                     check_for_trash_collisions,
@@ -232,6 +235,14 @@ pub fn fish_boundary(
     }
 }
 
+pub fn die_the_fish(mut fishicide_query: Query<(&DecayTimer, &mut CanDie), With<Fish>>) {
+    for (timer, mut can_die) in &mut fishicide_query {
+        if timer.timer.finished() && !can_die.dying {
+            can_die.dying = true;
+        }
+    }
+}
+
 pub fn cull_fish(
     mut commands: Commands,
     mut fish_query: Query<(Entity, &CanDie, &Transform), With<Fish>>,
@@ -338,7 +349,7 @@ pub fn spawn_fish(
     alive_fish: Res<AliveFish>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    if alive_fish.count > 10 {
+    if alive_fish.count > 20 {
         return;
     }
 

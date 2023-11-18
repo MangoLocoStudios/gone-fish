@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand::Rng;
 
 #[derive(Component)]
 pub struct Speed {
@@ -76,4 +77,18 @@ pub struct AnimationTimer(pub(crate) Timer);
 #[derive(Component)]
 pub struct CanDie {
     pub dying: bool,
+}
+
+#[derive(Component)]
+pub struct DecayTimer {
+    pub timer: Timer,
+}
+
+impl Default for DecayTimer {
+    fn default() -> Self {
+        let time_to_death = rand::thread_rng().gen_range(30. ..120.);
+        DecayTimer {
+            timer: Timer::from_seconds(time_to_death, TimerMode::Once),
+        }
+    }
 }

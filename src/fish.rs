@@ -110,6 +110,7 @@ impl Plugin for FishPlugin {
                     update_fish_count,
                     spawn_fish,
                     fish_movement,
+                    fish_boundary,
                     check_for_rod_collisions,
                     check_for_trash_collisions,
                     check_for_boat_collisions,
@@ -175,18 +176,9 @@ pub fn setup(
 pub fn fish_movement(
     time: Res<Time>,
     rod_query: Query<&Transform, (With<Rod>, Without<Fish>)>,
-    mut fish_query: Query<
-        (
-            &mut TextureAtlasSprite,
-            &mut Transform,
-            &mut Direction,
-            &Speed,
-            &FishState,
-        ),
-        With<Fish>,
-    >,
+    mut fish_query: Query<(&mut Transform, &mut Direction, &Speed, &FishState), With<Fish>>,
 ) {
-    for (mut fish, mut transform, mut direction, speed, state) in &mut fish_query {
+    for (mut transform, direction, speed, state) in &mut fish_query {
         match state {
             FishState::Swimming => {
                 // Move the thing
@@ -199,15 +191,6 @@ pub fn fish_movement(
                     }
                     _ => {}
                 }
-
-                // Flip the thing when at edge
-                if transform.translation.x < -1800. {
-                    *direction = Direction::Right;
-                    fish.flip_x = false;
-                } else if transform.translation.x > 1800. {
-                    *direction = Direction::Left;
-                    fish.flip_x = true;
-                }
             }
             FishState::Caught => {
                 if let Ok(rod) = rod_query.get_single() {
@@ -215,6 +198,21 @@ pub fn fish_movement(
                     transform.translation.y = rod.translation.y;
                 }
             }
+        }
+    }
+}
+
+pub fn fish_boundary(
+    mut fish_query: Query<(&mut TextureAtlasSprite, &mut Transform, &mut Direction), With<Fish>>,
+) {
+    for (mut fish, transform, mut direction) in &mut fish_query {
+        // Flip the thing when at edge
+        if transform.translation.x < -1800. {
+            *direction = Direction::Right;
+            fish.flip_x = false;
+        } else if transform.translation.x > 1800. {
+            *direction = Direction::Left;
+            fish.flip_x = true;
         }
     }
 }

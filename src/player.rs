@@ -33,7 +33,7 @@ impl Plugin for PlayerPlugin {
                 (
                     player_movement,
                     check_for_port_collisions,
-                    // handle_animation_states,
+                    handle_animation_states,
                 )
                     .run_if(in_state(Game)),
             );
@@ -130,20 +130,20 @@ fn player_movement(
     *player_state = PlayerState::Idle;
 }
 
-// fn handle_animation_states(
-//     mut player_query: Query<(&mut AnimationIndices, &PlayerState), With<Player>>,
-//     asset_server: Res<AssetServer>,
-//     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-// ) {
-//     let (mut animation_indicies, player_state) = player_query.single_mut();
-//
-//     match *player_state {
-//         PlayerState::Rowing => {}
-//         PlayerState::Fishing => {}
-//         PlayerState::Idle => {}
-//         PlayerState::Catching => {}
-//     }
-// }
+fn handle_animation_states(
+    mut player_query: Query<(&mut AnimationIndices, &PlayerState), With<Player>>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    let (mut animation_indicies, player_state) = player_query.single_mut();
+
+    match *player_state {
+        PlayerState::Rowing => {}
+        PlayerState::Fishing => {}
+        PlayerState::Idle => {}
+        PlayerState::Catching => {}
+    }
+}
 
 fn check_for_port_collisions(
     mut player_query: Query<&Transform, With<Player>>,

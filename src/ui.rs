@@ -15,9 +15,6 @@ impl Plugin for UIPlugin {
     }
 }
 
-// Keeping in case needed later
-enum UIState {}
-
 #[derive(Component)]
 struct StorageText;
 
@@ -29,7 +26,6 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         font: asset_server.load("fonts/Pixellari.ttf"),
         font_size: 40.0,
         color: Color::GOLD,
-        ..default()
     };
 
     // UI Canvas

@@ -82,7 +82,6 @@ fn main_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         font: asset_server.load("fonts/Pixellari.ttf"),
         font_size: 40.0,
         color: TEXT_COLOR,
-        ..default()
     };
 
     commands
@@ -118,7 +117,6 @@ fn main_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 font: asset_server.load("fonts/Pixellari.ttf"),
                                 font_size: 80.0,
                                 color: TEXT_COLOR,
-                                ..default()
                             },
                         )
                         .with_style(Style {

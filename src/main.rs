@@ -11,6 +11,9 @@ pub mod shaders;
 pub mod systems;
 pub mod trash;
 
+#[allow(unused_imports)] // TODO: Remove this once shaders are implemented
+use bevy::sprite::MaterialMesh2dBundle;
+
 use crate::components::{AnimationIndices, AnimationTimer};
 use crate::game::GamePlugin;
 use crate::menu::MenuPlugin;
@@ -18,7 +21,7 @@ use crate::port::Port;
 use crate::rod::Rod;
 use crate::systems::animate_sprite;
 use crate::GameState::Game;
-use bevy::sprite::{Material2dPlugin, MaterialMesh2dBundle};
+use bevy::sprite::Material2dPlugin;
 use bevy::{prelude::*, window::WindowTheme};
 use shaders::GradientMaterial;
 
@@ -65,9 +68,9 @@ fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut shader: ResMut<Assets<GradientMaterial>>,
+    mut _shader: ResMut<Assets<GradientMaterial>>, // TODO: Remove '_' once shaders are implemented
     window: Query<&mut Window>,
-    mut meshes: ResMut<Assets<Mesh>>,
+    mut _meshes: ResMut<Assets<Mesh>>, // TODO: Remove '_' once shaders are implemented
 ) {
     let window = window.single();
     // From center of screen.
@@ -125,36 +128,56 @@ fn setup(
     }
 
     // Water
-    // commands.spawn(SpriteBundle {
-    //     sprite: Sprite {
-    //         color: Color::hex("#7287D5").expect("is a valid colour."),
-    //         ..default()
-    //     },
+    commands.spawn(SpriteBundle {
+        sprite: Sprite {
+            color: Color::hex("#7287D5").expect("is a valid colour."),
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(0., -550., 0.),
+            scale: Vec3::new(5000., 1000., 0.),
+            ..default()
+        },
+        ..default()
+    });
+
+    // Water shader
+    // commands.spawn(MaterialMesh2dBundle {
+    //     mesh: meshes
+    //         .add(
+    //             shape::Quad {
+    //                 size: Vec2::new(5000., 655.),
+    //                 ..Default::default()
+    //             }
+    //             .into(),
+    //         )
+    //         .into(),
     //     transform: Transform {
-    //         translation: Vec3::new(0., -550., 0.),
-    //         scale: Vec3::new(5000., 1000., 0.),
+    //         translation: Vec3::new(0., -397., 0.),
     //         ..default()
     //     },
+    //     material: shader.add(GradientMaterial {}),
     //     ..default()
     // });
 
-    commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes
-            .add(
-                shape::Quad {
-                    size: Vec2::new(5000., 655.),
-                    ..Default::default()
-                }
-                .into(),
-            )
-            .into(),
-        transform: Transform {
-            translation: Vec3::new(0., -397., 0.),
-            ..default()
-        },
-        material: shader.add(GradientMaterial {}),
-        ..default()
-    });
+    // Test shader square
+    // commands.spawn(MaterialMesh2dBundle {
+    //     mesh: meshes
+    //         .add(
+    //             shape::Quad {
+    //                 size: Vec2::new(300., 300.),
+    //                 ..Default::default()
+    //             }
+    //             .into(),
+    //         )
+    //         .into(),
+    //     transform: Transform {
+    //         translation: Vec3::new(200., 0., 40.),
+    //         ..default()
+    //     },
+    //     material: shader.add(GradientMaterial {}),
+    //     ..default()
+    // });
 }
 
 fn camera(

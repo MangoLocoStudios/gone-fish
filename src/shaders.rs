@@ -10,4 +10,3 @@ impl Material2d for GradientMaterial {
         "shaders/gradient_material.wgsl".into()
     }
 }
-

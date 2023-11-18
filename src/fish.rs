@@ -361,10 +361,7 @@ pub fn spawn_fish(
     });
 }
 
-pub fn update_fish_count(
-    fish_query: Query<&Fish>,
-    mut alive_fish: ResMut<AliveFish>,
-) {
+pub fn update_fish_count(fish_query: Query<&Fish>, mut alive_fish: ResMut<AliveFish>) {
     let fish_found = fish_query.iter().count() as u32;
 
     alive_fish.count = fish_found;

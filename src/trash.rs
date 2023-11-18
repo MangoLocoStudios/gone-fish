@@ -82,7 +82,6 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     translation: Vec3::new(horizontal_position, -vertical_position, 5.0),
                     scale: Vec3::splat(3.),
                     rotation: Quat::from_rotation_z(rand::thread_rng().gen_range(0.0..360.)),
-                    ..default()
                 },
                 ..default()
             },

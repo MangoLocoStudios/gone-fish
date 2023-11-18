@@ -30,11 +30,7 @@ impl Plugin for PlayerPlugin {
             .add_systems(OnEnter(Game), setup)
             .add_systems(
                 Update,
-                (
-                    player_movement,
-                    check_for_port_collisions,
-                )
-                    .run_if(in_state(Game)),
+                (player_movement, check_for_port_collisions).run_if(in_state(Game)),
             );
     }
 }

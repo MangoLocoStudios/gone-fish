@@ -11,7 +11,7 @@ use crate::{
 };
 use bevy::prelude::*;
 use rand::{distributions::Standard, prelude::Distribution, Rng};
-use std::{f32::consts::E, slice::Iter};
+use std::slice::Iter;
 
 #[derive(Component, Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum FishVariant {

@@ -43,7 +43,7 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        width: Val::Percent(25.),
+                        width: Val::Percent(50.),
                         padding: UiRect::all(Val::Px(25.)),
                         flex_direction: FlexDirection::Row,
                         ..default()
@@ -83,6 +83,6 @@ fn update_storage_ui(
     let mut stui = storage_ui_query.single_mut();
     let fish_storage = fish_storage_query.single();
 
-    stui.sections[0].value = format!("{} kg /", fish_storage.current);
+    stui.sections[0].value = format!(" {:.2} kg /", fish_storage.current);
     stui.sections[1].value = format!(" {} kg", fish_storage.max);
 }

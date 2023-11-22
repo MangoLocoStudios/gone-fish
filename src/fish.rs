@@ -405,8 +405,7 @@ pub fn spawn_fish(
                 variant: fish,
                 weight: Weight {
                     // Round weight to .2 decimal places
-                    current: (rand::thread_rng().gen_range(fish.get_weight_range())
-                        * 100.0_f32)
+                    current: (rand::thread_rng().gen_range(fish.get_weight_range()) * 100.0_f32)
                         .round()
                         / 100.0,
                 },

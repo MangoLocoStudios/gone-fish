@@ -57,9 +57,9 @@ impl FishVariant {
 
     pub fn get_weight_range(self) -> std::ops::Range<f32> {
         match self {
-            FishVariant::Trout => 0.1..3.,
-            FishVariant::Tuna => 2.7..5.,
-            FishVariant::Salmon => 4.5..9.,
+            FishVariant::Trout => 0.1..1.5,
+            FishVariant::Tuna => 1.5..3.,
+            FishVariant::Salmon => 3.0..4.,
         }
     }
 }

@@ -139,6 +139,7 @@ fn setup(
 }
 
 fn camera(
+    time: Res<Time>,
     mut camera_query: Query<(&mut Transform, &mut OrthographicProjection), With<Camera2d>>,
     rod_query: Query<&Transform, (With<Rod>, Without<Camera2d>, Without<Port>)>,
     port_query: Query<&Transform, (With<Port>, Without<Rod>, Without<Camera2d>)>,
@@ -153,9 +154,19 @@ fn camera(
 
     if let Ok(rod) = rod {
         if rod.translation.y < -205. {
-            camera_transform.translation.y = rod.translation.y;
+            if camera_transform.translation.y > rod.translation.y {
+                camera_transform.translation.y += -50. * time.delta_seconds();
+            } else {
+                camera_transform.translation.y += 50. * time.delta_seconds();
+            }
         } else {
-            camera_transform.translation.y = 0.;
+            if camera_transform.translation.y < 0. {
+                camera_transform.translation.y += 100. * time.delta_seconds();
+            }
+        }
+    } else {
+        if camera_transform.translation.y < 0. {
+            camera_transform.translation.y += 100. * time.delta_seconds();
         }
     }
 }

@@ -203,6 +203,10 @@ pub fn fish_movement(
     for (mut transform, direction, speed, state) in &mut fish_query {
         match state {
             FishState::Swimming => {
+                // Handle fish that are too high up
+                if transform.translation.y > -100. {
+                    transform.translation.y -= 1.0 * time.delta_seconds() * speed.current;
+                };
                 // Move the thing
                 match *direction {
                     Direction::Left => {

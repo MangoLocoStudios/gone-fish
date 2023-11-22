@@ -159,15 +159,11 @@ fn camera(
             } else {
                 camera_transform.translation.y += 50. * time.delta_seconds();
             }
-        } else {
-            if camera_transform.translation.y < 0. {
-                camera_transform.translation.y += 100. * time.delta_seconds();
-            }
-        }
-    } else {
-        if camera_transform.translation.y < 0. {
+        } else if camera_transform.translation.y < 0. {
             camera_transform.translation.y += 100. * time.delta_seconds();
         }
+    } else if camera_transform.translation.y < 0. {
+        camera_transform.translation.y += 100. * time.delta_seconds();
     }
 }
 

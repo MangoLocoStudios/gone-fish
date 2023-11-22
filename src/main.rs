@@ -139,15 +139,32 @@ fn setup(
 }
 
 fn camera(
+    time: Res<Time>,
     mut camera_query: Query<(&mut Transform, &mut OrthographicProjection), With<Camera2d>>,
+    rod_query: Query<&Transform, (With<Rod>, Without<Camera2d>, Without<Port>)>,
     port_query: Query<&Transform, (With<Port>, Without<Rod>, Without<Camera2d>)>,
 ) {
+    let rod = rod_query.get_single();
     let port = port_query.single();
-    let (camera_transform, mut camera) = camera_query.single_mut();
+    let (mut camera_transform, mut camera) = camera_query.single_mut();
 
     let diff = port.translation.x - camera_transform.translation.x;
     camera.scale = (diff.abs() / 1000.) + 0.5;
     camera.scale = camera.scale.clamp(0.5, 3.);
+
+    if let Ok(rod) = rod {
+        if rod.translation.y < -205. {
+            if camera_transform.translation.y > rod.translation.y {
+                camera_transform.translation.y += -50. * time.delta_seconds();
+            } else {
+                camera_transform.translation.y += 50. * time.delta_seconds();
+            }
+        } else if camera_transform.translation.y < 0. {
+            camera_transform.translation.y += 100. * time.delta_seconds();
+        }
+    } else if camera_transform.translation.y < 0. {
+        camera_transform.translation.y += 100. * time.delta_seconds();
+    }
 }
 
 fn despawn_screen<T: Component>(to_despawn: Query<Entity, With<T>>, mut commands: Commands) {

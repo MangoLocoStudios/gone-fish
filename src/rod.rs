@@ -1,6 +1,7 @@
 use bevy::{prelude::*, sprite::collide_aabb::collide};
 
 use crate::{
+    components::{Acceleration, Velocity},
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     fish::Fish,
     player::{Boat, Player},
@@ -69,6 +70,8 @@ fn cast_rod(
                 },
                 ..default()
             },
+            Velocity(Vec3::new(0., -ROD_MOVEMENT_DOWN, 0.)),
+            Acceleration(Vec3::splat(0.)),
         ));
     }
 }
@@ -181,18 +184,21 @@ fn rod_movement(
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
     rod_properties: Res<RodProperties>,
-    mut rod_query: Query<&mut Transform, (With<Rod>, Without<Player>)>,
+    mut rod_query: Query<
+        (&mut Transform, &mut Acceleration, &mut Velocity),
+        (With<Rod>, Without<Player>),
+    >,
     player_query: Query<&Transform, With<Player>>,
 ) {
     let player = player_query.single();
-    let mut transform = match rod_query.get_single_mut() {
-        Ok(transform) => transform,
+    let (mut transform, mut acceleration, mut velocity) = match rod_query.get_single_mut() {
+        Ok((transform, acceleration, velocity)) => (transform, acceleration, velocity),
         Err(_) => return,
     };
 
     // Move rod up
-    if keyboard_input.just_pressed(KeyCode::Space) {
-        transform.translation.y += rod_properties.pull;
+    if keyboard_input.just_pressed(KeyCode::Space) && acceleration.0.y < 150. {
+        acceleration.0.y += rod_properties.pull * 4.;
     }
 
     // Keep rod x aligned with player
@@ -200,7 +206,19 @@ fn rod_movement(
 
     // Constantly move the rod downwards as long as it's above
     // the length of the rod
-    if transform.translation.y > (0.0 - rod_properties.length) {
-        transform.translation.y -= ROD_MOVEMENT_DOWN * time.delta_seconds();
+    transform.translation += (velocity.0 + acceleration.0) * time.delta_seconds();
+
+    // Decay acceleration
+    if acceleration.0.y > 0. {
+        acceleration.0.y -= 5.;
+    } else {
+        acceleration.0.y = 0.;
+    }
+
+    // Ensure rod doesn't move further than its length
+    if transform.translation.y < -rod_properties.length {
+        velocity.0 = Vec3::splat(0.);
+    } else {
+        velocity.0 = Vec3::new(0., -ROD_MOVEMENT_DOWN, 0.);
     }
 }

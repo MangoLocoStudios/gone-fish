@@ -46,6 +46,22 @@ impl FishVariant {
             AnimationIndices { first: 0, last: 1 },
         )
     }
+
+    pub fn get_spawn_depth_range(self) -> std::ops::Range<f32> {
+        match self {
+            FishVariant::Trout => 100.0..200.,
+            FishVariant::Tuna => 300.0..500.,
+            FishVariant::Salmon => 600.0..800.,
+        }
+    }
+
+    pub fn get_weight_range(self) -> std::ops::Range<f32> {
+        match self {
+            FishVariant::Trout => 0.1..3.,
+            FishVariant::Tuna => 2.7..5.,
+            FishVariant::Salmon => 4.5..9.,
+        }
+    }
 }
 
 impl Distribution<FishVariant> for Standard {
@@ -99,8 +115,6 @@ impl Default for FishBundle {
 const FISH_INVINCIBILITY_TIME: f32 = 1.;
 const FISH_SPEED_MIN: f32 = 150.;
 const FISH_SPEED_MAX: f32 = 250.;
-const FISH_WEIGHT_MIN: f32 = 0.1;
-const FISH_WEIGHT_MAX: f32 = 3.;
 
 pub struct FishPlugin;
 
@@ -134,10 +148,11 @@ pub fn setup(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     for _ in 0..20 {
-        let vertical_position = rand::thread_rng().gen_range(100.0..500.);
-        let horizontal_position = rand::thread_rng().gen_range(-1800.0..1800.);
-        let direction = Direction::random_y();
         let fish: FishVariant = rand::random();
+        let direction = Direction::random_y();
+
+        let vertical_position = rand::thread_rng().gen_range(fish.get_spawn_depth_range());
+        let horizontal_position = rand::thread_rng().gen_range(-1800.0..1800.);
 
         commands.spawn({
             let (texture_atlas, animation_indices) = fish.texture_atlas(asset_server.clone());
@@ -166,7 +181,7 @@ pub fn setup(
                     variant: fish,
                     weight: Weight {
                         // Round weight to .2 decimal places
-                        current: (rand::thread_rng().gen_range(FISH_WEIGHT_MIN..FISH_WEIGHT_MAX)
+                        current: (rand::thread_rng().gen_range(fish.get_weight_range())
                             * 100.0_f32)
                             .round()
                             / 100.0,
@@ -353,10 +368,11 @@ pub fn spawn_fish(
         return;
     }
 
-    let vertical_position = rand::thread_rng().gen_range(100.0..500.);
-    let horizontal_position = rand::thread_rng().gen_range(-1800.0..1800.);
-    let direction = Direction::random_y();
     let fish: FishVariant = rand::random();
+    let direction = Direction::random_y();
+
+    let vertical_position = rand::thread_rng().gen_range(fish.get_spawn_depth_range());
+    let horizontal_position = rand::thread_rng().gen_range(-1800.0..1800.);
 
     commands.spawn({
         let (texture_atlas, animation_indices) = fish.texture_atlas(asset_server.clone());
@@ -385,7 +401,7 @@ pub fn spawn_fish(
                 variant: fish,
                 weight: Weight {
                     // Round weight to .2 decimal places
-                    current: (rand::thread_rng().gen_range(FISH_WEIGHT_MIN..FISH_WEIGHT_MAX)
+                    current: (rand::thread_rng().gen_range(fish.get_weight_range())
                         * 100.0_f32)
                         .round()
                         / 100.0,

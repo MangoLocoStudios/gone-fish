@@ -32,18 +32,3 @@ impl Default for PortStorage {
         }
     }
 }
-
-#[derive(Resource)]
-pub struct RodProperties {
-    pub length: f32,
-    pub pull: f32,
-}
-
-impl Default for RodProperties {
-    fn default() -> Self {
-        Self {
-            length: 200.,
-            pull: 25.,
-        }
-    }
-}

@@ -100,26 +100,24 @@ fn update_line(
     rod_query: Query<&Transform, (With<Rod>, Without<Player>, Without<Line>)>,
     player_query: Query<&Transform, (With<Player>, Without<Rod>, Without<Line>)>,
 ) {
-    if let Ok((mut line_transform, mut line_sprite)) = line_query.get_single_mut() {
-        if let Ok(rod_transform) = rod_query.get_single() {
-            let player_transform = player_query.single();
+    if let (Ok((mut line_transform, mut line_sprite)), Ok(rod_transform), Ok(player_transform)) =
+        (line_query.get_single_mut(), rod_query.get_single(), player_query.get_single()) {
 
-            let player_pos = player_transform.translation;
-            let rod_pos = rod_transform.translation;
+        // Calculate mid-point and distance between rod and player
+        let midpoint = (player_transform.translation + rod_transform.translation) / 2.0;
+        let length = player_transform.translation.distance(rod_transform.translation);
 
-            // Update the position of the line
-            line_transform.translation = (player_pos + rod_pos) / 2.0;
+        // Update line position and length
+        line_transform.translation = midpoint;
+        line_sprite.custom_size = Some(Vec2::new(1.0, length));
 
-            // Update the length of the line
-            let length = player_pos.distance(rod_pos);
-            line_sprite.custom_size = Some(Vec2::new(1.0, length));
-
-            // Update the rotation of the line
-            let diff = rod_pos - player_pos;
-            let angle = diff.y.atan2(diff.x);
-            line_transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);        }
+        // Calculate and update the rotation of the line
+        let direction = rod_transform.translation - player_transform.translation;
+        let angle = direction.y.atan2(direction.x);
+        line_transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);
     }
 }
+
 
 
 

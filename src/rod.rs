@@ -73,7 +73,7 @@ impl Plugin for RodPlugin {
                     check_for_boat_collisions,
                     check_for_fish_collisions,
                     check_for_trash_collisions,
-                    update_line // Included from 'HEAD'
+                    update_line
                 )
                     .run_if(in_state(Game)),
             );

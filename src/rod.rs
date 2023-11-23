@@ -130,11 +130,7 @@ fn update_line(
     rod_query: Query<&Transform, (With<Rod>, Without<Player>, Without<Line>)>,
     player_query: Query<&Transform, (With<Player>, Without<Rod>, Without<Line>)>,
 ) {
-    if let (
-        Ok((mut line_transform, mut line_sprite)),
-        Ok(rod_transform),
-        Ok(player_transform),
-    ) = (
+    if let (Ok((mut line_transform, mut line_sprite)), Ok(rod_transform), Ok(player_transform)) = (
         line_query.get_single_mut(),
         rod_query.get_single(),
         player_query.get_single(),

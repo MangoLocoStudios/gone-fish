@@ -15,7 +15,6 @@ pub struct RodProperties {
     pub pull: f32,
 }
 
-// RodVariant enum and its implementation from 'main' branch
 #[derive(Component, Clone, Copy)]
 pub enum RodVariant {
     StickWithString,
@@ -45,7 +44,6 @@ impl RodVariant {
     }
 }
 
-// Merged changes for RodState, including Debug trait from 'HEAD'
 #[derive(Component, Debug)]
 enum RodState {
     Idle,
@@ -65,8 +63,7 @@ struct Line;
 
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
-        // Merged setup from both branches
-        app/*.init_resource::<RodProperties>()*/
+        app
             .add_event::<BoatCollisionEvent>()
             .add_systems(
                 Update,

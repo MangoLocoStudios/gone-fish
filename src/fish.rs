@@ -123,7 +123,7 @@ impl Distribution<FishVariant> for Standard {
     }
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, PartialEq)]
 pub enum FishState {
     Swimming,
     Caught,
@@ -253,10 +253,6 @@ pub fn fish_movement(
     for (mut transform, direction, speed, state) in &mut fish_query {
         match state {
             FishState::Swimming => {
-                // Handle fish that are too high up
-                if transform.translation.y > -100. {
-                    transform.translation.y -= 1.0 * time.delta_seconds() * speed.current;
-                };
                 // Move the thing
                 match *direction {
                     Direction::Left => {
@@ -264,6 +260,9 @@ pub fn fish_movement(
                     }
                     Direction::Right => {
                         transform.translation.x += 1.0 * time.delta_seconds() * speed.current
+                    }
+                    Direction::Down => {
+                        transform.translation.y -= 0.5 * time.delta_seconds() * speed.current
                     }
                     _ => {}
                 }
@@ -278,8 +277,18 @@ pub fn fish_movement(
     }
 }
 
-pub fn fish_boundary(mut fish_query: Query<(&mut Transform, &mut Direction, &CanDie), With<Fish>>) {
-    for (transform, mut direction, can_die) in &mut fish_query {
+pub fn fish_boundary(
+    mut fish_query: Query<(&mut Transform, &FishState, &mut Direction, &CanDie), With<Fish>>,
+) {
+    for (transform, _fish_state, mut direction, can_die) in &mut fish_query {
+        if transform.translation.y > -100. && *direction != Direction::Down {
+            *direction = Direction::Down
+        }
+
+        if transform.translation.y < -100. && *direction == Direction::Down {
+            *direction = Direction::random_y();
+        }
+
         if can_die.dying {
             return;
         }
@@ -293,17 +302,26 @@ pub fn fish_boundary(mut fish_query: Query<(&mut Transform, &mut Direction, &Can
 }
 
 pub fn orient_fish(
-    mut fish_query: Query<(&mut TextureAtlasSprite, &Transform, &mut Direction), With<Fish>>,
+    mut fish_query: Query<(&mut TextureAtlasSprite, &mut Transform, &mut Direction), With<Fish>>,
 ) {
-    for (mut fish, _transform, direction) in &mut fish_query {
+    for (mut fish, mut transform, direction) in &mut fish_query {
         match *direction {
             Direction::Left => {
                 fish.flip_x = true;
+                transform.rotation = Quat::IDENTITY;
             }
             Direction::Right => {
                 fish.flip_x = false;
+                transform.rotation = Quat::IDENTITY;
             }
-            _ => {}
+            Direction::Up => {
+                fish.flip_x = false;
+                transform.rotation = Quat::from_rotation_z(std::f32::consts::PI / 2.0);
+            }
+            Direction::Down => {
+                fish.flip_x = false;
+                transform.rotation = Quat::from_rotation_z(-std::f32::consts::PI / 2.0);
+            }
         }
     }
 }

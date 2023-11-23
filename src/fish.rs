@@ -254,8 +254,7 @@ pub fn orient_fish(
             Direction::Right => {
                 fish.flip_x = false;
             }
-            Direction::Up => todo!(),
-            Direction::Down => todo!(),
+            _ => {}
         }
     }
 }

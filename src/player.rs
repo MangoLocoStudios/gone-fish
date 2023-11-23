@@ -3,7 +3,7 @@ use crate::{
     events::PortCollisionEvent,
     port::Port,
     resources::PlayerFishStored,
-    rod::RodVariant,
+    rod::{Rod, RodVariant},
     GameState::Game,
 };
 use bevy::prelude::*;
@@ -12,7 +12,7 @@ use bevy::sprite::collide_aabb::collide;
 #[derive(Component)]
 pub struct Player;
 
-#[derive(Component, PartialEq)]
+#[derive(Component, PartialEq, Debug)]
 pub enum PlayerState {
     Rowing,
     Fishing,
@@ -31,7 +31,12 @@ impl Plugin for PlayerPlugin {
             .add_systems(OnEnter(Game), setup)
             .add_systems(
                 Update,
-                (player_movement, check_for_port_collisions).run_if(in_state(Game)),
+                (
+                    player_movement,
+                    check_for_port_collisions,
+                    handle_animation_states,
+                )
+                    .run_if(in_state(Game)),
             );
     }
 }
@@ -48,7 +53,6 @@ pub fn setup(
                 texture: asset_server.load("craftpix/objects/Boat.png"),
                 transform: Transform {
                     translation: Vec3::new(13., -10., -1.),
-                    // scale: Vec3::new(100.0, 50.0, 0.0),
                     ..default()
                 },
                 ..default()
@@ -58,15 +62,18 @@ pub fn setup(
 
     let player = commands
         .spawn({
-            let texture_handle = asset_server.load("craftpix/fisherman/Fisherman_row.png");
+            let texture_handle = asset_server.load("craftpix/fisherman/fisherman_spritesheet.png");
             let texture_atlas =
-                TextureAtlas::from_grid(texture_handle, Vec2::new(48., 48.), 4, 1, None, None);
+                TextureAtlas::from_grid(texture_handle, Vec2::new(48., 48.), 6, 4, None, None);
             let texture_atlas_handle = texture_atlases.add(texture_atlas);
-            let animation_indices = AnimationIndices { first: 0, last: 3 };
+            let animation_indices = AnimationIndices {
+                first: 18,
+                last: 21,
+            };
 
             (
                 Player,
-                PlayerState::Rowing,
+                PlayerState::Idle,
                 RodVariant::StickWithString,
                 FishStorage {
                     current: 0.,
@@ -91,6 +98,32 @@ pub fn setup(
     commands.entity(player).push_children(&[boat]);
 }
 
+fn handle_animation_states(
+    mut player_query: Query<(&mut AnimationIndices, &mut PlayerState), With<Player>>,
+    rod: Query<&Rod>,
+) {
+    let (mut animation_indicies, mut player_state) = player_query.single_mut();
+
+    println!("[DEBUG] state {:?} ", player_state);
+
+    if rod.get_single().is_ok() {
+        *player_state = PlayerState::Fishing;
+    }
+
+    *animation_indicies = match *player_state {
+        PlayerState::Rowing => AnimationIndices {
+            first: 12,
+            last: 15,
+        },
+        PlayerState::Fishing => AnimationIndices { first: 0, last: 3 },
+        PlayerState::Idle => AnimationIndices {
+            first: 18,
+            last: 21,
+        },
+        PlayerState::Catching => AnimationIndices { first: 6, last: 11 },
+    }
+}
+
 fn player_movement(
     _event: EventReader<PortCollisionEvent>,
     time: Res<Time>,
@@ -108,23 +141,25 @@ fn player_movement(
     // From center of player.
     let player_width = transform.scale.truncate().x / 2.;
 
-    if transform.translation.x - player_width > -window_width
-        && keyboard_input.pressed(KeyCode::Left)
-    {
-        *player_state = PlayerState::Rowing;
-        transform.translation.x -= 150. * time.delta_seconds();
-        camera.translation.x -= 150. * time.delta_seconds();
-    }
+    if keyboard_input.pressed(KeyCode::Left) || keyboard_input.pressed(KeyCode::Right) {
+        if transform.translation.x - player_width > -window_width
+            && keyboard_input.pressed(KeyCode::Left)
+        {
+            *player_state = PlayerState::Rowing;
+            transform.translation.x -= 150. * time.delta_seconds();
+            camera.translation.x -= 150. * time.delta_seconds();
+        }
 
-    if transform.translation.x + player_width < window_width
-        && keyboard_input.pressed(KeyCode::Right)
-    {
-        *player_state = PlayerState::Rowing;
-        transform.translation.x += 150. * time.delta_seconds();
-        camera.translation.x += 150. * time.delta_seconds();
+        if transform.translation.x + player_width < window_width
+            && keyboard_input.pressed(KeyCode::Right)
+        {
+            *player_state = PlayerState::Rowing;
+            transform.translation.x += 150. * time.delta_seconds();
+            camera.translation.x += 150. * time.delta_seconds();
+        }
+    } else {
+        *player_state = PlayerState::Idle;
     }
-
-    *player_state = PlayerState::Idle;
 }
 
 fn check_for_port_collisions(

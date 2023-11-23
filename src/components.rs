@@ -65,7 +65,7 @@ pub struct Invincibility {
     pub invincibility_timer: Timer,
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct AnimationIndices {
     pub first: usize,
     pub last: usize,

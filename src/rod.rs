@@ -4,7 +4,7 @@ use crate::{
     components::{Acceleration, Velocity},
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     fish::Fish,
-    player::{Boat, Player},
+    player::{Boat, Player, PlayerState},
     trash::Trash,
     GameState::Game,
 };
@@ -101,7 +101,7 @@ fn cast_rod(
             SpriteBundle {
                 texture: asset_server.load("fish_hook.png"),
                 transform: Transform {
-                    translation: Vec3::new(player.translation.x, -50., 10.),
+                    translation: Vec3::new(player.translation.x, -75., 10.),
                     scale: Vec3::splat(1.5),
                     ..default()
                 },
@@ -112,16 +112,17 @@ fn cast_rod(
             LineToPlayer,
         ));
 
-        commands
-            .spawn(SpriteBundle {
+        commands.spawn((
+            Line,
+            SpriteBundle {
                 sprite: Sprite {
                     color: Color::BLACK,
                     custom_size: Some(Vec2::new(2.0, 0.0)), // Thin and initially of zero length
                     ..default()
                 },
                 ..default()
-            })
-            .insert(Line);
+            },
+        ));
     }
 }
 
@@ -130,11 +131,11 @@ fn update_line(
     rod_query: Query<&Transform, (With<Rod>, Without<Player>, Without<Line>)>,
     player_query: Query<&Transform, (With<Player>, Without<Rod>, Without<Line>)>,
 ) {
-    if let (Ok((mut line_transform, mut line_sprite)), Ok(rod_transform), Ok(player_transform)) = (
-        line_query.get_single_mut(),
-        rod_query.get_single(),
-        player_query.get_single(),
-    ) {
+    let player_transform = player_query.single();
+
+    if let (Ok((mut line_transform, mut line_sprite)), Ok(rod_transform)) =
+        (line_query.get_single_mut(), rod_query.get_single())
+    {
         // Reset and show the line when rod is cast again
         let midpoint = (player_transform.translation + rod_transform.translation) / 2.0;
         let length = player_transform
@@ -154,12 +155,12 @@ fn check_for_boat_collisions(
     mut commands: Commands,
     rod_query: Query<(Entity, &Transform), (With<Rod>, Without<Player>)>,
     line_query: Query<Entity, With<Line>>,
-    player_query: Query<&Transform, With<Player>>,
+    mut player_query: Query<(&Transform, &mut PlayerState), With<Player>>,
     boat_query: Query<(&Transform, &Handle<Image>), With<Boat>>,
     mut boat_collision_event: EventWriter<BoatCollisionEvent>,
     assets: Res<Assets<Image>>,
 ) {
-    let player = player_query.single();
+    let (player, mut state) = player_query.single_mut();
     let (boat, image) = boat_query.single();
 
     let (rod_entity, rod) = match rod_query.get_single() {
@@ -172,23 +173,41 @@ fn check_for_boat_collisions(
         Err(_) => return,
     };
 
-    if collide(
-        // Child (boat) position is relative to parent (player) so we must
-        // combine their translations to get the boats world translation
-        player.translation + boat.translation,
-        assets
-            .get(image)
-            .expect("boat to always have an available image")
-            .size()
-            .as_vec2()
-            * boat.scale.truncate(),
-        rod.translation,
-        rod.scale.truncate(),
-    )
-    .is_none()
-    {
+    if rod.translation.y < -74. {
         return;
     }
+
+    *state = PlayerState::Catching;
+
+    // println!(
+    //     "[DEBUG] boat {} {} - rod {}",
+    //     player.translation + boat.translation,
+    //     assets
+    //         .get(image)
+    //         .expect("boat to always have an available image")
+    //         .size()
+    //         .as_vec2()
+    //         * boat.scale.truncate(),
+    //     rod.translation,
+    // );
+    //
+    // if collide(
+    //     // Child (boat) position is relative to parent (player) so we must
+    //     // combine their translations to get the boats world translation
+    //     player.translation + boat.translation,
+    //     assets
+    //         .get(image)
+    //         .expect("boat to always have an available image")
+    //         .size()
+    //         .as_vec2()
+    //         * boat.scale.truncate(),
+    //     rod.translation,
+    //     rod.scale.truncate(),
+    // )
+    // .is_none()
+    // {
+    //     return;
+    // }
 
     boat_collision_event.send_default();
 

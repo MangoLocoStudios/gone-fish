@@ -5,15 +5,48 @@ use crate::{
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
     fish::Fish,
     player::{Boat, Player},
-    resources::RodProperties,
     trash::Trash,
     GameState::Game,
 };
+
+pub struct RodProperties {
+    pub length: f32,
+    pub pull: f32,
+}
 
 #[derive(Component)]
 enum RodState {
     Idle,
     Reeling,
+}
+
+#[derive(Component, Clone, Copy)]
+pub enum RodVariant {
+    StickWithString,
+    TwigAndTwineTackler,
+    ReedReelRig,
+    WillowWhiskerWeaver,
+    BambooBlisscaster,
+    FiberFusion,
+    GraphiteGuardian,
+    CarbonCaster9000,
+}
+
+impl RodVariant {
+    pub fn get_rod_properties(self) -> RodProperties {
+        let (length, pull) = match self {
+            RodVariant::StickWithString => (200., 100.),
+            RodVariant::TwigAndTwineTackler => (335., 105.),
+            RodVariant::ReedReelRig => (450., 115.),
+            RodVariant::WillowWhiskerWeaver => (650., 118.),
+            RodVariant::BambooBlisscaster => (1000., 123.),
+            RodVariant::FiberFusion => (1300., 127.),
+            RodVariant::GraphiteGuardian => (1800., 130.),
+            RodVariant::CarbonCaster9000 => (2400., 135.),
+        };
+
+        RodProperties { length, pull }
+    }
 }
 
 #[derive(Component)]
@@ -23,19 +56,17 @@ pub struct RodPlugin;
 
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<RodProperties>()
-            .add_event::<BoatCollisionEvent>()
-            .add_systems(
-                Update,
-                (
-                    cast_rod,
-                    rod_movement,
-                    check_for_boat_collisions,
-                    check_for_fish_collisions,
-                    check_for_trash_collisions,
-                )
-                    .run_if(in_state(Game)),
-            );
+        app.add_event::<BoatCollisionEvent>().add_systems(
+            Update,
+            (
+                cast_rod,
+                rod_movement,
+                check_for_boat_collisions,
+                check_for_fish_collisions,
+                check_for_trash_collisions,
+            )
+                .run_if(in_state(Game)),
+        );
     }
 }
 
@@ -43,6 +74,7 @@ const ROD_MOVEMENT_DOWN: f32 = 75.0;
 
 fn cast_rod(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     keyboard_input: Res<Input<KeyCode>>,
     rod: Query<&Rod>,
     player_position: Query<&Transform, With<Player>>,
@@ -59,13 +91,10 @@ fn cast_rod(
             Rod,
             RodState::Idle,
             SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgb(0.25, 0.75, 0.25),
-                    ..default()
-                },
+                texture: asset_server.load("fish_hook.png"),
                 transform: Transform {
                     translation: Vec3::new(player.translation.x, -50., 10.),
-                    scale: Vec3::new(20., 20., 0.),
+                    scale: Vec3::splat(1.5),
                     ..default()
                 },
                 ..default()
@@ -117,12 +146,13 @@ fn check_for_boat_collisions(
 }
 
 fn check_for_fish_collisions(
-    mut rod_query: Query<(&Transform, &mut RodState), With<Rod>>,
+    mut rod_query: Query<(&Transform, &mut RodState, &Handle<Image>), With<Rod>>,
     fish_query: Query<(Entity, &Transform), With<Fish>>,
     mut collision_events: EventWriter<FishCollisionWithRodEvent>,
+    assets: Res<Assets<Image>>,
 ) {
-    let (rod, mut state) = match rod_query.get_single_mut() {
-        Ok((rod, state)) => (rod, state),
+    let (rod, mut state, image) = match rod_query.get_single_mut() {
+        Ok((rod, state, image)) => (rod, state, image),
         Err(_) => return,
     };
 
@@ -131,7 +161,12 @@ fn check_for_fish_collisions(
             fish_transform.translation,
             fish_transform.scale.truncate(),
             rod.translation,
-            rod.scale.truncate(),
+            assets
+                .get(image)
+                .expect("boat to always have an available image")
+                .size()
+                .as_vec2()
+                * rod.scale.truncate(),
         )
         .is_none()
         {
@@ -183,22 +218,23 @@ fn check_for_trash_collisions(
 fn rod_movement(
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
-    rod_properties: Res<RodProperties>,
     mut rod_query: Query<
         (&mut Transform, &mut Acceleration, &mut Velocity),
         (With<Rod>, Without<Player>),
     >,
-    player_query: Query<&Transform, With<Player>>,
+    player_query: Query<(&Transform, &RodVariant), With<Player>>,
 ) {
-    let player = player_query.single();
+    let (player, rod_stats) = player_query.single();
     let (mut transform, mut acceleration, mut velocity) = match rod_query.get_single_mut() {
         Ok((transform, acceleration, velocity)) => (transform, acceleration, velocity),
         Err(_) => return,
     };
 
+    let rod_stats = rod_stats.get_rod_properties();
+
     // Move rod up
     if keyboard_input.just_pressed(KeyCode::Space) && acceleration.0.y < 150. {
-        acceleration.0.y += rod_properties.pull * 4.;
+        acceleration.0.y += rod_stats.pull;
     }
 
     // Keep rod x aligned with player
@@ -216,7 +252,7 @@ fn rod_movement(
     }
 
     // Ensure rod doesn't move further than its length
-    if transform.translation.y < -rod_properties.length {
+    if transform.translation.y < -rod_stats.length {
         velocity.0 = Vec3::splat(0.);
     } else {
         velocity.0 = Vec3::new(0., -ROD_MOVEMENT_DOWN, 0.);

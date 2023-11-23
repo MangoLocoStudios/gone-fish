@@ -71,7 +71,7 @@ fn shake_camera(
     let mut new_transform = Vec3::new(0., 0., 0.);
 
     // Create a Perlin noise generator
-    let perlin = Perlin::new();
+    let perlin = Perlin::new(30);
 
     // Generate a random Vector3
     let mut rng = rand::thread_rng();

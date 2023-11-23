@@ -1,11 +1,11 @@
 use crate::components::CameraShake;
+use crate::events::DepositFishEvent;
 use crate::port::Port;
 use crate::rod::Rod;
 use crate::GameState::Game;
 use bevy::prelude::*;
 use noise::{NoiseFn, Perlin};
 use rand::Rng;
-use crate::events::DepositFishEvent;
 
 pub struct CameraPlugin;
 
@@ -14,8 +14,10 @@ const MAX_SHAKE_ANGLE: f32 = 5.;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
-            .add_systems(Update, ((camera, shake_camera, check_for_deposit_events).run_if(in_state(Game)),));
+        app.add_systems(Startup, setup).add_systems(
+            Update,
+            ((camera, shake_camera, check_for_deposit_events).run_if(in_state(Game)),),
+        );
     }
 }
 

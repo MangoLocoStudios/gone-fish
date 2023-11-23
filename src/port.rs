@@ -20,10 +20,7 @@ impl Plugin for PortPlugin {
             .add_event::<PortCollisionEvent>()
             .add_event::<DepositFishEvent>()
             .add_systems(Startup, setup)
-            .add_systems(
-                Update,
-                (check_for_port_collisions).run_if(in_state(Game)),
-            );
+            .add_systems(Update, (check_for_port_collisions).run_if(in_state(Game)));
     }
 }
 

@@ -60,7 +60,7 @@ fn setup(mut commands: Commands, window: Query<&mut Window>, asset_server: Res<A
 fn check_for_deposit_events(
     mut commands: Commands,
     mut ev_deposit: EventReader<DepositFishEvent>,
-    mut camera_query: Query<(Entity, &Transform), With<Camera2d>>,
+    camera_query: Query<(Entity, &Transform), With<Camera2d>>,
 ) {
     for _ in ev_deposit.read() {
         println!("[DEBUG] Deposit Event Started");

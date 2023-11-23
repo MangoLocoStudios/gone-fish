@@ -177,6 +177,7 @@ impl Plugin for FishPlugin {
                     update_fish_count,
                     spawn_fish,
                     fish_movement,
+                    orient_fish,
                     fish_boundary,
                     die_the_fish,
                     cull_fish,
@@ -276,28 +277,32 @@ pub fn fish_movement(
     }
 }
 
-pub fn fish_boundary(
-    mut fish_query: Query<
-        (
-            &mut TextureAtlasSprite,
-            &mut Transform,
-            &mut Direction,
-            &CanDie,
-        ),
-        With<Fish>,
-    >,
-) {
-    for (mut fish, transform, mut direction, can_die) in &mut fish_query {
+pub fn fish_boundary(mut fish_query: Query<(&mut Transform, &mut Direction, &CanDie), With<Fish>>) {
+    for (transform, mut direction, can_die) in &mut fish_query {
         if can_die.dying {
             return;
         }
         // Flip the thing when at edge
         if transform.translation.x < -1800. {
             *direction = Direction::Right;
-            fish.flip_x = false;
         } else if transform.translation.x > 1800. {
             *direction = Direction::Left;
-            fish.flip_x = true;
+        }
+    }
+}
+
+pub fn orient_fish(
+    mut fish_query: Query<(&mut TextureAtlasSprite, &Transform, &mut Direction), With<Fish>>,
+) {
+    for (mut fish, _transform, direction) in &mut fish_query {
+        match *direction {
+            Direction::Left => {
+                fish.flip_x = true;
+            }
+            Direction::Right => {
+                fish.flip_x = false;
+            }
+            _ => {}
         }
     }
 }

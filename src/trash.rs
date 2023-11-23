@@ -112,7 +112,7 @@ pub fn trash_movement(
         }
 
         // Flip the thing when at edge
-        if transform.translation.x < 1800. {
+        if transform.translation.x < -1800. {
             *direction = Direction::Right;
         } else if transform.translation.x > 1800. {
             *direction = Direction::Left;

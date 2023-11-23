@@ -7,7 +7,6 @@ use crate::{
     GameState::Game,
 };
 use bevy::prelude::*;
-use std::option::Option;
 
 #[derive(Component)]
 pub struct Port;

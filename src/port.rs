@@ -1,3 +1,5 @@
+use crate::components::CameraShake;
+use crate::events::DepositFishEvent;
 use crate::{
     components::FishStorage,
     events::PortCollisionEvent,
@@ -17,8 +19,12 @@ impl Plugin for PortPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PortStorage>()
             .add_event::<PortCollisionEvent>()
+            .add_event::<DepositFishEvent>()
             .add_systems(Startup, setup)
-            .add_systems(Update, check_for_port_collisions.run_if(in_state(Game)));
+            .add_systems(
+                Update,
+                (check_for_port_collisions, check_for_deposit_events).run_if(in_state(Game)),
+            );
     }
 }
 
@@ -51,8 +57,27 @@ fn setup(mut commands: Commands, window: Query<&mut Window>, asset_server: Res<A
     },));
 }
 
+fn check_for_deposit_events(
+    mut commands: Commands,
+    mut ev_deposit: EventReader<DepositFishEvent>,
+    mut camera_query: Query<(Entity, &mut Transform), With<Camera2d>>,
+) {
+    for _ in ev_deposit.read() {
+        println!("[DEBUG] Deposit Event Started");
+
+        let (camera_entity, mut camera_transform) = camera_query.single();
+
+        commands.entity(camera_entity).insert(CameraShake {
+            shake_timer: Timer::from_seconds(0.15, TimerMode::Once),
+            intensity: 0.5,
+            start_translation: camera_transform.translation.clone(),
+        });
+    }
+}
+
 fn check_for_port_collisions(
-    mut event: EventReader<PortCollisionEvent>,
+    mut ev_deposit: EventWriter<DepositFishEvent>,
+    mut ev_port_collison: EventReader<PortCollisionEvent>,
     mut port_fish: ResMut<PortStorage>,
     mut rod_props: ResMut<RodProperties>,
     mut player_fish: ResMut<PlayerFishStored>,
@@ -62,7 +87,9 @@ fn check_for_port_collisions(
         return;
     }
 
-    for _ in event.read() {
+    for _ in ev_port_collison.read() {
+        ev_deposit.send(DepositFishEvent);
+
         println!("[DEBUG] Depositing fish");
         for fish in &player_fish.fish {
             if let Some(count) = port_fish.fish.get_mut(&fish.0) {

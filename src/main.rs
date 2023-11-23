@@ -11,7 +11,7 @@ pub mod systems;
 pub mod trash;
 mod ui;
 
-use crate::components::{AnimationIndices, AnimationTimer};
+use crate::components::{AnimationIndices, AnimationTimer, CameraShake};
 use crate::game::GamePlugin;
 use crate::menu::MenuPlugin;
 use crate::port::Port;
@@ -20,9 +20,13 @@ use crate::systems::animate_sprite;
 use crate::ui::UIPlugin;
 use crate::GameState::Game;
 use bevy::{prelude::*, window::WindowTheme};
+use noise::{NoiseFn, Perlin};
+use rand::Rng;
 use systems::tick_decay_timers;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
+const MAX_SHAKE_OFFSET: f32 = 50.;
+const MAX_SHAKE_ANGLE: f32 = 5.;
 
 #[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]
 enum GameState {
@@ -57,8 +61,13 @@ fn main() {
             UIPlugin,
         ))
         .add_systems(Startup, setup)
-        .add_systems(Update, (camera.run_if(in_state(Game)), animate_sprite))
-        .add_systems(Update, (camera.run_if(in_state(Game)), tick_decay_timers))
+        .add_systems(
+            Update,
+            (
+                (camera, shake_camera, tick_decay_timers).run_if(in_state(Game)),
+                animate_sprite,
+            ),
+        )
         .run();
 }
 
@@ -152,19 +161,70 @@ fn camera(
     camera.scale = (diff.abs() / 1000.) + 0.5;
     camera.scale = camera.scale.clamp(0.5, 3.);
 
+    let mut new_transform = Vec3::new(0., 0., camera_transform.translation.z);
+
     if let Ok(rod) = rod {
         if rod.translation.y < -205. {
+            new_transform.y = 50.;
             if camera_transform.translation.y > rod.translation.y {
-                camera_transform.translation.y += -50. * time.delta_seconds();
-            } else {
-                camera_transform.translation.y += 50. * time.delta_seconds();
+                new_transform.y *= -1.;
             }
-        } else if camera_transform.translation.y < 0. {
-            camera_transform.translation.y += 100. * time.delta_seconds();
         }
-    } else if camera_transform.translation.y < 0. {
-        camera_transform.translation.y += 100. * time.delta_seconds();
     }
+
+    if camera_transform.translation.y < 0. {
+        new_transform.y = 100.;
+    }
+
+    camera_transform.translation += new_transform * time.delta_seconds();
+}
+
+fn shake_camera(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut camera_query: Query<(&mut Transform, Entity, &mut CameraShake), With<Camera2d>>,
+) {
+    if camera_query.is_empty() {
+        return;
+    }
+
+    let (mut camera_transform, camera_entity, mut camera_shake) = camera_query.single_mut();
+
+    let mut new_transform = Vec3::new(0., 0., 0.);
+
+    // Create a Perlin noise generator
+    let perlin = Perlin::new();
+
+    // Generate a random Vector3
+    let mut rng = rand::thread_rng();
+    let random_vector = [
+        rng.gen_range(-100.0..100.0),
+        rng.gen_range(-100.0..100.0),
+        rng.gen_range(-100.0..100.0),
+    ];
+
+    // Use the random vector and time to generate Perlin noise
+    let noise_value = perlin.get([random_vector[0], random_vector[1], random_vector[2]]);
+
+    // Map the noise value to the range [-1, 1]
+    let mapped_value = map_range(noise_value, -1.0, 1.0, -1.0, 1.0);
+
+    let nz = MAX_SHAKE_ANGLE * camera_shake.intensity * mapped_value;
+    new_transform.x = MAX_SHAKE_OFFSET * camera_shake.intensity * mapped_value;
+    new_transform.y = MAX_SHAKE_OFFSET * camera_shake.intensity * mapped_value;
+
+    camera_transform.translation += new_transform * time.delta_seconds();
+    camera_transform.rotation.z += nz * time.delta_seconds();
+
+    if camera_shake.shake_timer.tick(time.delta()).finished() {
+        commands.entity(camera_entity).remove::<CameraShake>();
+        camera_transform.rotation = Quat::IDENTITY;
+    }
+}
+
+// Function to map a value from one range to another
+fn map_range(value: f64, in_min: f64, in_max: f64, out_min: f64, out_max: f64) -> f32 {
+    ((value - in_min) / (in_max - in_min) * (out_max - out_min) + out_min) as f32
 }
 
 fn despawn_screen<T: Component>(to_despawn: Query<Entity, With<T>>, mut commands: Commands) {

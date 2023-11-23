@@ -16,3 +16,9 @@ pub struct TrashCollisionEvent;
 pub struct PortCollisionEvent {
     pub collision_direction: Collision,
 }
+
+#[derive(Event)]
+pub struct DepositFishEvent;
+
+#[derive(Event)]
+pub struct CatchFishEvent;

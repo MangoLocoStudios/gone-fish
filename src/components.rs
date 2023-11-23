@@ -66,6 +66,13 @@ pub struct Invincibility {
 }
 
 #[derive(Component)]
+pub struct CameraShake {
+    pub shake_timer: Timer,
+    pub intensity: f32,
+    pub start_translation: Vec3,
+}
+
+#[derive(Component)]
 pub struct AnimationIndices {
     pub first: usize,
     pub last: usize,

@@ -1,5 +1,4 @@
 use crate::components::CameraShake;
-use crate::events::DepositFishEvent;
 use crate::port::Port;
 use crate::rod::Rod;
 use crate::GameState::Game;
@@ -14,10 +13,8 @@ const MAX_SHAKE_ANGLE: f32 = 5.;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup).add_systems(
-            Update,
-            ((camera, shake_camera, check_for_deposit_events).run_if(in_state(Game)),),
-        );
+        app.add_systems(Startup, setup)
+            .add_systems(Update, ((camera, shake_camera).run_if(in_state(Game)),));
     }
 }
 
@@ -98,24 +95,6 @@ fn shake_camera(
         commands.entity(camera_entity).remove::<CameraShake>();
         camera_transform.rotation = Quat::IDENTITY;
         camera_transform.translation = camera_shake.start_translation;
-    }
-}
-
-fn check_for_deposit_events(
-    mut commands: Commands,
-    mut ev_deposit: EventReader<DepositFishEvent>,
-    camera_query: Query<(Entity, &Transform), With<Camera2d>>,
-) {
-    for _ in ev_deposit.read() {
-        println!("[DEBUG] Deposit Event Started");
-
-        let (camera_entity, camera_transform) = camera_query.single();
-
-        commands.entity(camera_entity).insert(CameraShake {
-            shake_timer: Timer::from_seconds(0.15, TimerMode::Once),
-            intensity: 0.1,
-            start_translation: camera_transform.translation,
-        });
     }
 }
 

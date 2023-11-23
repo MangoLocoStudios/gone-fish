@@ -238,7 +238,7 @@ fn check_for_fish_collisions(
                 commands.entity(camera_entity).insert(CameraShake {
                     shake_timer: Timer::from_seconds(0.1, TimerMode::Once),
                     intensity: 0.25 * fish_weight.current,
-                    start_translation: camera_transform.translation.clone(),
+                    start_translation: camera_transform.translation,
                 });
             }
             RodState::Reeling => {}

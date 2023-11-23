@@ -182,7 +182,7 @@ fn camera(
 fn shake_camera(
     mut commands: Commands,
     time: Res<Time>,
-    mut camera_query: Query<(&mut Transform, Entity, &mut CameraShake), With<Camera2d>>,
+    camera_query: Query<(&mut Transform, Entity, &mut CameraShake), With<Camera2d>>,
 ) {
     if camera_query.is_empty() {
         return;

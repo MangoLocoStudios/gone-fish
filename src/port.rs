@@ -70,7 +70,7 @@ fn check_for_deposit_events(
         commands.entity(camera_entity).insert(CameraShake {
             shake_timer: Timer::from_seconds(0.15, TimerMode::Once),
             intensity: 0.5,
-            start_translation: camera_transform.translation.clone(),
+            start_translation: camera_transform.translation,
         });
     }
 }

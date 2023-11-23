@@ -403,7 +403,7 @@ pub fn check_for_trash_collisions(
     mut commands: Commands,
     mut trash_collision_event: EventReader<TrashCollisionEvent>,
     mut fish_query: Query<(Entity, &mut FishState), With<Fish>>,
-    mut camera_query: Query<(Entity, &Transform), (Without<Fish>, With<Camera2d>)>,
+    camera_query: Query<(Entity, &Transform), (Without<Fish>, With<Camera2d>)>,
 ) {
     for _ in trash_collision_event.read() {
         for (fish, mut state) in &mut fish_query {
@@ -423,7 +423,7 @@ pub fn check_for_trash_collisions(
                     commands.entity(camera_entity).insert(CameraShake {
                         shake_timer: Timer::from_seconds(0.1, TimerMode::Once),
                         intensity: 0.8,
-                        start_translation: camera_transform.translation.clone(),
+                        start_translation: camera_transform.translation,
                     });
                 }
             }

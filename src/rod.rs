@@ -127,12 +127,12 @@ fn cast_rod(
 
 fn update_line(
     mut line_query: Query<(&mut Transform, &mut Sprite), With<Line>>,
-    rod_query: Query<(&Transform, &RodState), (With<Rod>, Without<Player>, Without<Line>)>,
+    rod_query: Query<&Transform, (With<Rod>, Without<Player>, Without<Line>)>,
     player_query: Query<&Transform, (With<Player>, Without<Rod>, Without<Line>)>,
 ) {
     if let (
         Ok((mut line_transform, mut line_sprite)),
-        Ok((rod_transform, rod_state)),
+        Ok(rod_transform),
         Ok(player_transform),
     ) = (
         line_query.get_single_mut(),

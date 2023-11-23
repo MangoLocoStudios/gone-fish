@@ -1,4 +1,3 @@
-use crate::components::CameraShake;
 use crate::events::DepositFishEvent;
 use crate::{
     components::FishStorage,
@@ -23,7 +22,7 @@ impl Plugin for PortPlugin {
             .add_systems(Startup, setup)
             .add_systems(
                 Update,
-                (check_for_port_collisions, check_for_deposit_events).run_if(in_state(Game)),
+                (check_for_port_collisions).run_if(in_state(Game)),
             );
     }
 }
@@ -55,24 +54,6 @@ fn setup(mut commands: Commands, window: Query<&mut Window>, asset_server: Res<A
         },
         ..default()
     });
-}
-
-fn check_for_deposit_events(
-    mut commands: Commands,
-    mut ev_deposit: EventReader<DepositFishEvent>,
-    camera_query: Query<(Entity, &Transform), With<Camera2d>>,
-) {
-    for _ in ev_deposit.read() {
-        println!("[DEBUG] Deposit Event Started");
-
-        let (camera_entity, camera_transform) = camera_query.single();
-
-        commands.entity(camera_entity).insert(CameraShake {
-            shake_timer: Timer::from_seconds(0.15, TimerMode::Once),
-            intensity: 0.5,
-            start_translation: camera_transform.translation,
-        });
-    }
 }
 
 fn check_for_port_collisions(

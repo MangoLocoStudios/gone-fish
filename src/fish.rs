@@ -443,7 +443,7 @@ pub fn spawn_fish(
     alive_fish: Res<AliveFish>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    if alive_fish.count > 150 {
+    if alive_fish.count > 80 {
         return;
     }
 

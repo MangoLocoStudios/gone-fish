@@ -1,3 +1,4 @@
+use crate::events::DepositFishEvent;
 use crate::{
     components::FishStorage,
     events::PortCollisionEvent,
@@ -17,8 +18,9 @@ impl Plugin for PortPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PortStorage>()
             .add_event::<PortCollisionEvent>()
+            .add_event::<DepositFishEvent>()
             .add_systems(Startup, setup)
-            .add_systems(Update, check_for_port_collisions.run_if(in_state(Game)));
+            .add_systems(Update, (check_for_port_collisions).run_if(in_state(Game)));
     }
 }
 
@@ -52,7 +54,8 @@ fn setup(mut commands: Commands, window: Query<&mut Window>, asset_server: Res<A
 }
 
 fn check_for_port_collisions(
-    mut event: EventReader<PortCollisionEvent>,
+    mut ev_deposit: EventWriter<DepositFishEvent>,
+    mut ev_port_collison: EventReader<PortCollisionEvent>,
     mut port_fish: ResMut<PortStorage>,
     mut player_fish: ResMut<PlayerFishStored>,
     mut player_query: Query<(&mut FishStorage, &mut RodVariant), With<Player>>,
@@ -61,7 +64,9 @@ fn check_for_port_collisions(
         return;
     }
 
-    for _ in event.read() {
+    for _ in ev_port_collison.read() {
+        ev_deposit.send(DepositFishEvent);
+
         println!("[DEBUG] Depositing fish");
         for fish in &player_fish.fish {
             if let Some(count) = port_fish.fish.get_mut(&fish.0) {

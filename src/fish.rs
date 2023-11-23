@@ -1,3 +1,4 @@
+use crate::components::CameraShake;
 use crate::{
     components::{
         AnimationIndices, AnimationTimer, CanDie, DecayTimer, Direction, FishStorage,
@@ -406,6 +407,7 @@ pub fn check_for_trash_collisions(
     mut commands: Commands,
     mut trash_collision_event: EventReader<TrashCollisionEvent>,
     mut fish_query: Query<(Entity, &mut FishState), With<Fish>>,
+    camera_query: Query<(Entity, &Transform), (Without<Fish>, With<Camera2d>)>,
 ) {
     for _ in trash_collision_event.read() {
         for (fish, mut state) in &mut fish_query {
@@ -418,7 +420,15 @@ pub fn check_for_trash_collisions(
                             TimerMode::Once,
                         ),
                     });
-                    *state = FishState::Swimming
+                    *state = FishState::Swimming;
+
+                    let (camera_entity, camera_transform) = camera_query.single();
+
+                    commands.entity(camera_entity).insert(CameraShake {
+                        shake_timer: Timer::from_seconds(0.1, TimerMode::Once),
+                        intensity: 0.8,
+                        start_translation: camera_transform.translation,
+                    });
                 }
             }
         }

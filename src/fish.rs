@@ -10,7 +10,11 @@ use crate::{
     GameState::Game,
 };
 use bevy::prelude::*;
-use rand::{distributions::Standard, prelude::Distribution, Rng};
+use rand::{
+    distributions::{Standard, WeightedIndex},
+    prelude::Distribution,
+    Rng,
+};
 use std::slice::Iter;
 
 #[derive(Component, Clone, Copy, Debug, Eq, PartialEq, Hash)]
@@ -439,11 +443,28 @@ pub fn spawn_fish(
     alive_fish: Res<AliveFish>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    if alive_fish.count > 50 {
+    if alive_fish.count > 80 {
         return;
     }
 
-    let fish: FishVariant = rand::random();
+    let fish_weights = [100, 70, 55, 40, 30, 2, 15, 9];
+    let dist = WeightedIndex::new(fish_weights).unwrap();
+
+    let mut rng = rand::thread_rng();
+
+    let fish_index: usize = dist.sample(&mut rng);
+    let fish = match fish_index {
+        0 => FishVariant::One,
+        1 => FishVariant::Two,
+        2 => FishVariant::Three,
+        3 => FishVariant::Four,
+        4 => FishVariant::Five,
+        5 => FishVariant::Six,
+        6 => FishVariant::Seven,
+        7 => FishVariant::Eight,
+        _ => panic!("Invalid fish variant index"), // This should not happen
+    };
+
     let direction = Direction::random_y();
 
     let vertical_position = rand::thread_rng().gen_range(fish.get_spawn_depth_range());

@@ -9,15 +9,10 @@ use crate::{
     GameState::Game,
 };
 
+#[derive(Default)]
 pub struct RodProperties {
     pub length: f32,
     pub pull: f32,
-}
-
-#[derive(Component)]
-enum RodState {
-    Idle,
-    Reeling,
 }
 
 #[derive(Component, Clone, Copy)]
@@ -49,10 +44,22 @@ impl RodVariant {
     }
 }
 
+#[derive(Component, Debug)]
+enum RodState {
+    Idle,
+    Reeling,
+}
+
 #[derive(Component)]
 pub struct Rod;
 
 pub struct RodPlugin;
+
+#[derive(Component)]
+struct LineToPlayer;
+
+#[derive(Component)]
+struct Line;
 
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
@@ -64,6 +71,7 @@ impl Plugin for RodPlugin {
                 check_for_boat_collisions,
                 check_for_fish_collisions,
                 check_for_trash_collisions,
+                update_line,
             )
                 .run_if(in_state(Game)),
         );
@@ -101,13 +109,51 @@ fn cast_rod(
             },
             Velocity(Vec3::new(0., -ROD_MOVEMENT_DOWN, 0.)),
             Acceleration(Vec3::splat(0.)),
+            LineToPlayer,
         ));
+
+        commands
+            .spawn(SpriteBundle {
+                sprite: Sprite {
+                    color: Color::BLACK,
+                    custom_size: Some(Vec2::new(2.0, 0.0)), // Thin and initially of zero length
+                    ..default()
+                },
+                ..default()
+            })
+            .insert(Line);
+    }
+}
+
+fn update_line(
+    mut line_query: Query<(&mut Transform, &mut Sprite), With<Line>>,
+    rod_query: Query<&Transform, (With<Rod>, Without<Player>, Without<Line>)>,
+    player_query: Query<&Transform, (With<Player>, Without<Rod>, Without<Line>)>,
+) {
+    if let (Ok((mut line_transform, mut line_sprite)), Ok(rod_transform), Ok(player_transform)) = (
+        line_query.get_single_mut(),
+        rod_query.get_single(),
+        player_query.get_single(),
+    ) {
+        // Reset and show the line when rod is cast again
+        let midpoint = (player_transform.translation + rod_transform.translation) / 2.0;
+        let length = player_transform
+            .translation
+            .distance(rod_transform.translation);
+
+        line_transform.translation = midpoint;
+        line_sprite.custom_size = Some(Vec2::new(1.0, length));
+
+        let direction = rod_transform.translation - player_transform.translation;
+        let angle = direction.y.atan2(direction.x);
+        line_transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);
     }
 }
 
 fn check_for_boat_collisions(
     mut commands: Commands,
     rod_query: Query<(Entity, &Transform), (With<Rod>, Without<Player>)>,
+    line_query: Query<Entity, With<Line>>,
     player_query: Query<&Transform, With<Player>>,
     boat_query: Query<(&Transform, &Handle<Image>), With<Boat>>,
     mut boat_collision_event: EventWriter<BoatCollisionEvent>,
@@ -118,6 +164,11 @@ fn check_for_boat_collisions(
 
     let (rod_entity, rod) = match rod_query.get_single() {
         Ok((rod_entity, rod)) => (rod_entity, rod),
+        Err(_) => return,
+    };
+
+    let line_entity = match line_query.get_single() {
+        Ok(line_query) => line_query,
         Err(_) => return,
     };
 
@@ -143,6 +194,7 @@ fn check_for_boat_collisions(
 
     // Despawn rod when it's reeled back in
     commands.entity(rod_entity).despawn();
+    commands.entity(line_entity).despawn();
 }
 
 fn check_for_fish_collisions(

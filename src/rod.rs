@@ -21,6 +21,13 @@ pub struct Rod;
 
 pub struct RodPlugin;
 
+#[derive(Component)]
+struct LineToPlayer;
+
+#[derive(Component)]
+struct Line;
+
+
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<RodProperties>()
@@ -33,6 +40,7 @@ impl Plugin for RodPlugin {
                     check_for_boat_collisions,
                     check_for_fish_collisions,
                     check_for_trash_collisions,
+                    update_line
                 )
                     .run_if(in_state(Game)),
             );
@@ -72,9 +80,48 @@ fn cast_rod(
             },
             Velocity(Vec3::new(0., -ROD_MOVEMENT_DOWN, 0.)),
             Acceleration(Vec3::splat(0.)),
+            LineToPlayer,
         ));
+
+        commands.spawn(SpriteBundle {
+            sprite: Sprite {
+                color: Color::BLACK,
+                custom_size: Some(Vec2::new(2.0, 0.0)), // Thin and initially of zero length
+                ..default()
+            },
+            ..default()
+        })
+            .insert(Line);
     }
 }
+
+fn update_line(
+    mut line_query: Query<(&mut Transform, &mut Sprite), With<Line>>,
+    rod_query: Query<&Transform, (With<Rod>, Without<Player>, Without<Line>)>,
+    player_query: Query<&Transform, (With<Player>, Without<Rod>, Without<Line>)>,
+) {
+    if let Ok((mut line_transform, mut line_sprite)) = line_query.get_single_mut() {
+        if let Ok(rod_transform) = rod_query.get_single() {
+            let player_transform = player_query.single();
+
+            let player_pos = player_transform.translation;
+            let rod_pos = rod_transform.translation;
+
+            // Update the position of the line
+            line_transform.translation = (player_pos + rod_pos) / 2.0;
+
+            // Update the length of the line
+            let length = player_pos.distance(rod_pos);
+            line_sprite.custom_size = Some(Vec2::new(1.0, length));
+
+            // Update the rotation of the line
+            let diff = rod_pos - player_pos;
+            let angle = diff.y.atan2(diff.x);
+            line_transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);        }
+    }
+}
+
+
 
 fn check_for_boat_collisions(
     mut commands: Commands,

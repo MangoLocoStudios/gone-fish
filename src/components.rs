@@ -11,7 +11,7 @@ pub struct Weight {
     pub current: f32,
 }
 
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone, Copy, PartialEq)]
 pub enum Direction {
     Left,
     Right,

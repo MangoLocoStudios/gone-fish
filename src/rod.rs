@@ -10,7 +10,7 @@ use crate::{
     GameState::Game,
 };
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 enum RodState {
     Idle,
     Reeling,
@@ -97,21 +97,19 @@ fn cast_rod(
 
 fn update_line(
     mut line_query: Query<(&mut Transform, &mut Sprite), With<Line>>,
-    rod_query: Query<&Transform, (With<Rod>, Without<Player>, Without<Line>)>,
+    rod_query: Query<(&Transform, &RodState), (With<Rod>, Without<Player>, Without<Line>)>,
     player_query: Query<&Transform, (With<Player>, Without<Rod>, Without<Line>)>,
 ) {
-    if let (Ok((mut line_transform, mut line_sprite)), Ok(rod_transform), Ok(player_transform)) =
+    if let (Ok((mut line_transform, mut line_sprite)), Ok((rod_transform, rod_state)), Ok(player_transform)) =
         (line_query.get_single_mut(), rod_query.get_single(), player_query.get_single()) {
 
-        // Calculate mid-point and distance between rod and player
+        // Reset and show the line when rod is cast again
         let midpoint = (player_transform.translation + rod_transform.translation) / 2.0;
         let length = player_transform.translation.distance(rod_transform.translation);
 
-        // Update line position and length
         line_transform.translation = midpoint;
         line_sprite.custom_size = Some(Vec2::new(1.0, length));
 
-        // Calculate and update the rotation of the line
         let direction = rod_transform.translation - player_transform.translation;
         let angle = direction.y.atan2(direction.x);
         line_transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);
@@ -121,9 +119,11 @@ fn update_line(
 
 
 
+
 fn check_for_boat_collisions(
     mut commands: Commands,
     rod_query: Query<(Entity, &Transform), (With<Rod>, Without<Player>)>,
+    line_query: Query<Entity, With<Line>>,
     player_query: Query<&Transform, With<Player>>,
     boat_query: Query<(&Transform, &Handle<Image>), With<Boat>>,
     mut boat_collision_event: EventWriter<BoatCollisionEvent>,
@@ -134,6 +134,11 @@ fn check_for_boat_collisions(
 
     let (rod_entity, rod) = match rod_query.get_single() {
         Ok((rod_entity, rod)) => (rod_entity, rod),
+        Err(_) => return,
+    };
+
+    let line_entity = match line_query.get_single() {
+        Ok(line_query) => line_query,
         Err(_) => return,
     };
 
@@ -159,6 +164,8 @@ fn check_for_boat_collisions(
 
     // Despawn rod when it's reeled back in
     commands.entity(rod_entity).despawn();
+    commands.entity(line_entity).despawn();
+
 }
 
 fn check_for_fish_collisions(

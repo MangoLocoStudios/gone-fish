@@ -1,5 +1,6 @@
 use bevy::{prelude::*, sprite::collide_aabb::collide};
 
+use crate::components::{CameraShake, Weight};
 use crate::{
     components::{Acceleration, Velocity},
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
@@ -146,17 +147,19 @@ fn check_for_boat_collisions(
 }
 
 fn check_for_fish_collisions(
-    mut rod_query: Query<(&Transform, &mut RodState, &Handle<Image>), With<Rod>>,
-    fish_query: Query<(Entity, &Transform), With<Fish>>,
-    mut collision_events: EventWriter<FishCollisionWithRodEvent>,
     assets: Res<Assets<Image>>,
+    mut commands: Commands,
+    fish_query: Query<(Entity, &Transform, &Weight), With<Fish>>,
+    mut collision_events: EventWriter<FishCollisionWithRodEvent>,
+    mut rod_query: Query<(&Transform, &mut RodState, &Handle<Image>), With<Rod>>,
+    camera_query: Query<(Entity, &Transform), (With<Camera2d>, Without<Fish>)>,
 ) {
     let (rod, mut state, image) = match rod_query.get_single_mut() {
         Ok((rod, state, image)) => (rod, state, image),
         Err(_) => return,
     };
 
-    for (fish, fish_transform) in &fish_query {
+    for (fish, fish_transform, fish_weight) in &fish_query {
         if collide(
             fish_transform.translation,
             fish_transform.scale.truncate(),
@@ -177,6 +180,14 @@ fn check_for_fish_collisions(
             RodState::Idle => {
                 collision_events.send(FishCollisionWithRodEvent { fish });
                 *state = RodState::Reeling;
+
+                let (camera_entity, camera_transform) = camera_query.single();
+
+                commands.entity(camera_entity).insert(CameraShake {
+                    shake_timer: Timer::from_seconds(0.1, TimerMode::Once),
+                    intensity: 0.25 * fish_weight.current,
+                    start_translation: camera_transform.translation.clone(),
+                });
             }
             RodState::Reeling => {}
         }

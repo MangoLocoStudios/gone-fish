@@ -60,12 +60,12 @@ fn setup(mut commands: Commands, window: Query<&mut Window>, asset_server: Res<A
 fn check_for_deposit_events(
     mut commands: Commands,
     mut ev_deposit: EventReader<DepositFishEvent>,
-    mut camera_query: Query<(Entity, &mut Transform), With<Camera2d>>,
+    mut camera_query: Query<(Entity, &Transform), With<Camera2d>>,
 ) {
     for _ in ev_deposit.read() {
         println!("[DEBUG] Deposit Event Started");
 
-        let (camera_entity, mut camera_transform) = camera_query.single();
+        let (camera_entity, camera_transform) = camera_query.single();
 
         commands.entity(camera_entity).insert(CameraShake {
             shake_timer: Timer::from_seconds(0.15, TimerMode::Once),

@@ -12,6 +12,7 @@ use crate::{
 use bevy::prelude::*;
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 use std::slice::Iter;
+use crate::components::CameraShake;
 
 #[derive(Component, Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum FishVariant {
@@ -384,6 +385,7 @@ pub fn check_for_trash_collisions(
     mut commands: Commands,
     mut trash_collision_event: EventReader<TrashCollisionEvent>,
     mut fish_query: Query<(Entity, &mut FishState), With<Fish>>,
+    mut camera_query: Query<(Entity, &mut Transform), With<Camera2d>>,
 ) {
     for _ in trash_collision_event.read() {
         for (fish, mut state) in &mut fish_query {
@@ -396,7 +398,15 @@ pub fn check_for_trash_collisions(
                             TimerMode::Once,
                         ),
                     });
-                    *state = FishState::Swimming
+                    *state = FishState::Swimming;
+
+                    let (camera_entity, mut camera_transform) = camera_query.single();
+
+                    commands.entity(camera_entity).insert(CameraShake {
+                        shake_timer: Timer::from_seconds(0.1, TimerMode::Once),
+                        intensity: 0.8,
+                        start_translation: camera_transform.translation.clone(),
+                    });
                 }
             }
         }

@@ -219,6 +219,7 @@ fn shake_camera(
     if camera_shake.shake_timer.tick(time.delta()).finished() {
         commands.entity(camera_entity).remove::<CameraShake>();
         camera_transform.rotation = Quat::IDENTITY;
+        camera_transform.translation = camera_shake.start_translation;
     }
 }
 

@@ -15,32 +15,65 @@ use std::slice::Iter;
 
 #[derive(Component, Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum FishVariant {
-    Trout,
-    Tuna,
-    Salmon,
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
 }
 
 impl FishVariant {
     pub fn iterator() -> Iter<'static, FishVariant> {
-        static FISH_VARIANTS: [FishVariant; 3] =
-            [FishVariant::Trout, FishVariant::Tuna, FishVariant::Salmon];
+        static FISH_VARIANTS: [FishVariant; 8] = [
+            FishVariant::One,
+            FishVariant::Two,
+            FishVariant::Three,
+            FishVariant::Four,
+            FishVariant::Five,
+            FishVariant::Six,
+            FishVariant::Seven,
+            FishVariant::Eight,
+        ];
         FISH_VARIANTS.iter()
     }
 
     pub fn texture_atlas(self, asset_server: AssetServer) -> (TextureAtlas, AnimationIndices) {
         (
             match self {
-                FishVariant::Trout => {
+                FishVariant::One => {
                     let texture_handle = asset_server.load("craftpix/objects/Catch/1.png");
                     TextureAtlas::from_grid(texture_handle, Vec2::new(12., 6.), 2, 1, None, None)
                 }
-                FishVariant::Tuna => {
+                FishVariant::Two => {
                     let texture_handle = asset_server.load("craftpix/objects/Catch/2.png");
                     TextureAtlas::from_grid(texture_handle, Vec2::new(16., 12.), 2, 1, None, None)
                 }
-                FishVariant::Salmon => {
+                FishVariant::Three => {
                     let texture_handle = asset_server.load("craftpix/objects/Catch/3.png");
                     TextureAtlas::from_grid(texture_handle, Vec2::new(20., 12.), 2, 1, None, None)
+                }
+                FishVariant::Four => {
+                    let texture_handle = asset_server.load("craftpix/objects/Catch/4.png");
+                    TextureAtlas::from_grid(texture_handle, Vec2::new(26., 12.), 2, 1, None, None)
+                }
+                FishVariant::Five => {
+                    let texture_handle = asset_server.load("craftpix/objects/Catch/5.png");
+                    TextureAtlas::from_grid(texture_handle, Vec2::new(30., 12.), 2, 1, None, None)
+                }
+                FishVariant::Six => {
+                    let texture_handle = asset_server.load("craftpix/objects/Catch/6.png");
+                    TextureAtlas::from_grid(texture_handle, Vec2::new(54., 22.), 2, 1, None, None)
+                }
+                FishVariant::Seven => {
+                    let texture_handle = asset_server.load("craftpix/objects/Catch/7.png");
+                    TextureAtlas::from_grid(texture_handle, Vec2::new(30., 12.), 2, 1, None, None)
+                }
+                FishVariant::Eight => {
+                    let texture_handle = asset_server.load("craftpix/objects/Catch/8.png");
+                    TextureAtlas::from_grid(texture_handle, Vec2::new(28., 24.), 2, 1, None, None)
                 }
             },
             AnimationIndices { first: 0, last: 1 },
@@ -49,27 +82,42 @@ impl FishVariant {
 
     pub fn get_spawn_depth_range(self) -> std::ops::Range<f32> {
         match self {
-            FishVariant::Trout => 100.0..200.,
-            FishVariant::Tuna => 300.0..500.,
-            FishVariant::Salmon => 600.0..800.,
+            FishVariant::One => 100.0..200.,
+            FishVariant::Two => 150.0..500.,
+            FishVariant::Three => 400.0..800.,
+            FishVariant::Four => 700.0..1000.,
+            FishVariant::Five => 950.0..1300.,
+            FishVariant::Six => 100.0..2000.,
+            FishVariant::Seven => 1600.0..2000.,
+            FishVariant::Eight => 2300.0..2800.,
         }
     }
 
     pub fn get_weight_range(self) -> std::ops::Range<f32> {
         match self {
-            FishVariant::Trout => 0.1..1.5,
-            FishVariant::Tuna => 1.5..3.,
-            FishVariant::Salmon => 3.0..4.,
+            FishVariant::One => 0.1..1.,
+            FishVariant::Two => 1.5..3.,
+            FishVariant::Three => 3.0..4.,
+            FishVariant::Four => 3.5..5.,
+            FishVariant::Five => 5.0..8.,
+            FishVariant::Six => 10.0..15.,
+            FishVariant::Seven => 15.0..20.,
+            FishVariant::Eight => 25.0..30.,
         }
     }
 }
 
 impl Distribution<FishVariant> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> FishVariant {
-        match rng.gen_range(0..=2) {
-            0 => FishVariant::Tuna,
-            1 => FishVariant::Trout,
-            _ => FishVariant::Salmon,
+        match rng.gen_range(0..=7) {
+            0 => FishVariant::One,
+            1 => FishVariant::Two,
+            2 => FishVariant::Three,
+            3 => FishVariant::Four,
+            4 => FishVariant::Five,
+            5 => FishVariant::Six,
+            6 => FishVariant::Seven,
+            _ => FishVariant::Eight,
         }
     }
 }
@@ -104,7 +152,7 @@ impl Default for FishBundle {
             speed: Speed { current: 200. },
             weight: Weight { current: 0.1 },
             state: FishState::Swimming,
-            variant: FishVariant::Tuna,
+            variant: FishVariant::One,
             can_die: CanDie { dying: false },
             sprite_sheet: Default::default(),
             decay_timer: Default::default(),
@@ -373,7 +421,7 @@ pub fn spawn_fish(
     alive_fish: Res<AliveFish>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    if alive_fish.count > 20 {
+    if alive_fish.count > 50 {
         return;
     }
 

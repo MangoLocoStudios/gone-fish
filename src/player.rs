@@ -3,6 +3,7 @@ use crate::{
     events::PortCollisionEvent,
     port::Port,
     resources::PlayerFishStored,
+    rod::RodVariant,
     GameState::Game,
 };
 use bevy::prelude::*;
@@ -66,6 +67,7 @@ pub fn setup(
             (
                 Player,
                 PlayerState::Rowing,
+                RodVariant::StickWithString,
                 FishStorage {
                     current: 0.,
                     max: 3.,

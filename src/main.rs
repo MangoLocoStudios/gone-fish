@@ -11,6 +11,7 @@ pub mod rod;
 pub mod systems;
 pub mod trash;
 mod ui;
+mod audio;
 
 use crate::camera::CameraPlugin;
 use crate::components::{AnimationIndices, AnimationTimer};
@@ -21,6 +22,7 @@ use crate::ui::UIPlugin;
 use crate::GameState::Game;
 use bevy::{prelude::*, window::WindowTheme};
 use systems::tick_decay_timers;
+use crate::audio::AudioPlugin;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
@@ -56,6 +58,7 @@ fn main() {
             MenuPlugin,
             GamePlugin,
             UIPlugin,
+            AudioPlugin,
         ))
         .add_systems(Startup, setup)
         .add_systems(

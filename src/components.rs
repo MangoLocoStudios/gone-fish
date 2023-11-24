@@ -105,3 +105,9 @@ pub struct Velocity(pub(crate) Vec3);
 
 #[derive(Component, Debug)]
 pub struct Acceleration(pub(crate) Vec3);
+
+#[derive(Component)]
+pub struct BGMPlayer;
+
+#[derive(Component)]
+pub struct FoleyPlayer;

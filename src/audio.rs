@@ -2,6 +2,7 @@ use crate::events::{CatchFishEvent, DepositFishEvent, DropFishEvent, ReelingFish
 use crate::GameState::Game;
 use bevy::audio::{PlaybackMode, Volume};
 use bevy::prelude::*;
+use crate::components::BGMPlayer;
 
 pub struct AudioPlugin;
 
@@ -22,16 +23,17 @@ impl Plugin for AudioPlugin {
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    // commands.spawn((
-    //     AudioBundle {
-    //         source: asset_server.load("sounds/Windless Slopes.ogg"),
-    //         settings: PlaybackSettings {
-    //             volume: Volume::new_absolute(0.5),
-    //             ..default()
-    //         }
-    //     },
-    //     BGMPlayer,
-    // ));
+    commands.spawn((
+        AudioBundle {
+            source: asset_server.load("audio/bg-1.ogg"),
+            settings: PlaybackSettings {
+                mode: PlaybackMode::Loop,
+                volume: Volume::new_absolute(0.5),
+                ..default()
+            }
+        },
+        BGMPlayer,
+    ));
 }
 
 fn handle_audio_events<S, T>(
@@ -72,9 +74,9 @@ fn check_for_drop_fish_events(
 }
 
 fn check_for_fish_deposit_events(
-    mut commands: Commands,
+    commands: Commands,
     asset_server: Res<AssetServer>,
-    mut deposit_fish_event: EventReader<DepositFishEvent>,
+    deposit_fish_event: EventReader<DepositFishEvent>,
 ) {
     handle_audio_events(
         commands,

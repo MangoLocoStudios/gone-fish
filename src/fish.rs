@@ -1,4 +1,5 @@
 use crate::components::CameraShake;
+use crate::events::{CatchFishEvent, DropFishEvent, ReelingFishEvent};
 use crate::{
     components::{
         AnimationIndices, AnimationTimer, CanDie, DecayTimer, Direction, FishStorage,
@@ -174,6 +175,9 @@ pub struct FishPlugin;
 impl Plugin for FishPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<FishCollisionWithRodEvent>()
+            .add_event::<CatchFishEvent>()
+            .add_event::<DropFishEvent>()
+            .add_event::<ReelingFishEvent>()
             .init_resource::<AliveFish>()
             .add_systems(OnEnter(Game), setup)
             .add_systems(
@@ -354,6 +358,8 @@ pub fn cull_fish(
 pub fn check_for_boat_collisions(
     mut commands: Commands,
     mut boat_collision_event: EventReader<BoatCollisionEvent>,
+    mut catch_fish_event: EventWriter<CatchFishEvent>,
+    mut drop_fish_event: EventWriter<DropFishEvent>,
     mut player_query: Query<&mut FishStorage, With<Player>>,
     mut fish_stored: ResMut<PlayerFishStored>,
     mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), With<Fish>>,
@@ -368,6 +374,7 @@ pub fn check_for_boat_collisions(
                     if (weight.current + fish_storage.current) > fish_storage.max {
                         *state = FishState::Swimming;
 
+                        drop_fish_event.send_default();
                         println!(
                             "[DEBUG] Fish {:?} was too heavy, weighing at {} - current weight {} - max weight {}",
                             (fish_variant, weight), weight.current, fish_storage.current, fish_storage.max
@@ -376,6 +383,10 @@ pub fn check_for_boat_collisions(
                         fish_storage.current += weight.current;
                         fish_stored.fish.push((*fish_variant, *weight));
                         commands.entity(fish).despawn();
+                        catch_fish_event.send(CatchFishEvent {
+                            weight: *weight,
+                            fish_variant: *fish_variant,
+                        });
 
                         println!(
                             "[DEBUG] Fish caught {:?} - current weight {} - max weight {}",
@@ -390,13 +401,21 @@ pub fn check_for_boat_collisions(
 
 pub fn check_for_rod_collisions(
     mut fish_collision_with_rod_event: EventReader<FishCollisionWithRodEvent>,
-    mut fish_query: Query<(Entity, &mut FishState), (With<Fish>, Without<Invincibility>)>,
+    mut reeling_fish_event: EventWriter<ReelingFishEvent>,
+    mut fish_query: Query<
+        (Entity, &mut FishState, &FishVariant, &Weight),
+        (With<Fish>, Without<Invincibility>),
+    >,
 ) {
     for ev in fish_collision_with_rod_event.read() {
-        for (fish, mut state) in &mut fish_query {
+        for (fish, mut state, fish_variant, weight) in &mut fish_query {
             if fish != ev.fish {
                 continue;
             }
+            reeling_fish_event.send(ReelingFishEvent {
+                weight: *weight,
+                fish_variant: *fish_variant,
+            });
 
             *state = FishState::Caught
         }

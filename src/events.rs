@@ -1,3 +1,5 @@
+use crate::components::Weight;
+use crate::fish::FishVariant;
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::Collision;
 
@@ -17,8 +19,20 @@ pub struct PortCollisionEvent {
     pub collision_direction: Collision,
 }
 
-#[derive(Event)]
+#[derive(Event, Default)]
 pub struct DepositFishEvent;
 
+#[derive(Event, Default)]
+pub struct DropFishEvent;
+
 #[derive(Event)]
-pub struct CatchFishEvent;
+pub struct ReelingFishEvent {
+    pub weight: Weight,
+    pub fish_variant: FishVariant,
+}
+
+#[derive(Event)]
+pub struct CatchFishEvent {
+    pub weight: Weight,
+    pub fish_variant: FishVariant,
+}

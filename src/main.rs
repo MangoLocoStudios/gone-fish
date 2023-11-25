@@ -1,3 +1,4 @@
+mod audio;
 mod camera;
 pub mod components;
 pub mod events;
@@ -12,6 +13,7 @@ pub mod systems;
 pub mod trash;
 mod ui;
 
+use crate::audio::AudioPlugin;
 use crate::camera::CameraPlugin;
 use crate::components::{AnimationIndices, AnimationTimer};
 use crate::game::GamePlugin;
@@ -56,6 +58,7 @@ fn main() {
             MenuPlugin,
             GamePlugin,
             UIPlugin,
+            AudioPlugin,
         ))
         .add_systems(Startup, setup)
         .add_systems(

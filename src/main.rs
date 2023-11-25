@@ -1,3 +1,4 @@
+mod audio;
 mod camera;
 pub mod components;
 pub mod events;
@@ -11,8 +12,8 @@ pub mod rod;
 pub mod systems;
 pub mod trash;
 mod ui;
-mod audio;
 
+use crate::audio::AudioPlugin;
 use crate::camera::CameraPlugin;
 use crate::components::{AnimationIndices, AnimationTimer};
 use crate::game::GamePlugin;
@@ -22,7 +23,6 @@ use crate::ui::UIPlugin;
 use crate::GameState::Game;
 use bevy::{prelude::*, window::WindowTheme};
 use systems::tick_decay_timers;
-use crate::audio::AudioPlugin;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 

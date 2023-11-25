@@ -1,4 +1,5 @@
 use crate::components::CameraShake;
+use crate::events::{CatchFishEvent, DropFishEvent};
 use crate::{
     components::{
         AnimationIndices, AnimationTimer, CanDie, DecayTimer, Direction, FishStorage,
@@ -17,7 +18,6 @@ use rand::{
     Rng,
 };
 use std::slice::Iter;
-use crate::events::CatchFishEvent;
 
 #[derive(Component, Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum FishVariant {
@@ -176,6 +176,7 @@ impl Plugin for FishPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<FishCollisionWithRodEvent>()
             .add_event::<CatchFishEvent>()
+            .add_event::<DropFishEvent>()
             .init_resource::<AliveFish>()
             .add_systems(OnEnter(Game), setup)
             .add_systems(
@@ -357,6 +358,7 @@ pub fn check_for_boat_collisions(
     mut commands: Commands,
     mut boat_collision_event: EventReader<BoatCollisionEvent>,
     mut catch_fish_event: EventWriter<CatchFishEvent>,
+    mut drop_fish_event: EventWriter<DropFishEvent>,
     mut player_query: Query<&mut FishStorage, With<Player>>,
     mut fish_stored: ResMut<PlayerFishStored>,
     mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), With<Fish>>,
@@ -371,6 +373,7 @@ pub fn check_for_boat_collisions(
                     if (weight.current + fish_storage.current) > fish_storage.max {
                         *state = FishState::Swimming;
 
+                        drop_fish_event.send(DropFishEvent);
                         println!(
                             "[DEBUG] Fish {:?} was too heavy, weighing at {} - current weight {} - max weight {}",
                             (fish_variant, weight), weight.current, fish_storage.current, fish_storage.max
@@ -381,7 +384,7 @@ pub fn check_for_boat_collisions(
                         commands.entity(fish).despawn();
                         catch_fish_event.send(CatchFishEvent {
                             weight: *weight,
-                            fish_variant: *fish_variant
+                            fish_variant: *fish_variant,
                         });
 
                         println!(

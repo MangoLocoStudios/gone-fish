@@ -41,13 +41,14 @@ fn camera(
     if let Ok(rod) = rod {
         if rod.translation.y < -205. {
             new_transform.y = 50.;
-            if camera_transform.translation.y > rod.translation.y {
-                new_transform.y *= -1.;
-            }
-        }
-    }
 
-    if camera_transform.translation.y < 0. {
+            if camera_transform.translation.y > rod.translation.y {
+                new_transform.y = -50.;
+            }
+        } else if camera_transform.translation.y < 0. {
+            new_transform.y = 100.;
+        }
+    } else if camera_transform.translation.y < 0. {
         new_transform.y = 100.;
     }
 

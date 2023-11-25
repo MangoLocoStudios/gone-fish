@@ -1,5 +1,5 @@
 use crate::components::CameraShake;
-use crate::events::{CatchFishEvent, DropFishEvent};
+use crate::events::{CatchFishEvent, DropFishEvent, ReelingFishEvent};
 use crate::{
     components::{
         AnimationIndices, AnimationTimer, CanDie, DecayTimer, Direction, FishStorage,
@@ -177,6 +177,7 @@ impl Plugin for FishPlugin {
         app.add_event::<FishCollisionWithRodEvent>()
             .add_event::<CatchFishEvent>()
             .add_event::<DropFishEvent>()
+            .add_event::<ReelingFishEvent>()
             .init_resource::<AliveFish>()
             .add_systems(OnEnter(Game), setup)
             .add_systems(
@@ -400,15 +401,21 @@ pub fn check_for_boat_collisions(
 
 pub fn check_for_rod_collisions(
     mut fish_collision_with_rod_event: EventReader<FishCollisionWithRodEvent>,
-    mut fish_query: Query<(Entity, &mut FishState), (With<Fish>, Without<Invincibility>)>,
+    mut reeling_fish_event: EventWriter<ReelingFishEvent>,
+    mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), (With<Fish>, Without<Invincibility>)>,
 ) {
     for ev in fish_collision_with_rod_event.read() {
-        for (fish, mut state) in &mut fish_query {
+        for (fish, mut state, fish_variant, weight) in &mut fish_query {
             if fish != ev.fish {
                 continue;
             }
+            reeling_fish_event.send(ReelingFishEvent {
+                weight: *weight,
+                fish_variant: *fish_variant,
+            });
 
             *state = FishState::Caught
+
         }
     }
 }

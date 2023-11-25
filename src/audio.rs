@@ -1,5 +1,4 @@
-use crate::components::{BGMPlayer, FoleyPlayer};
-use crate::events::{CatchFishEvent, DepositFishEvent, DropFishEvent};
+use crate::events::{CatchFishEvent, DepositFishEvent, DropFishEvent, TrashCollisionEvent};
 use crate::GameState::Game;
 use bevy::audio::{PlaybackMode, Volume};
 use bevy::prelude::*;
@@ -14,6 +13,7 @@ impl Plugin for AudioPlugin {
                 check_for_catch_fish_events,
                 check_for_fish_deposit_events,
                 check_for_drop_fish_events,
+                check_for_trash_collision_events
             )
                 .run_if(in_state(Game)),
         );
@@ -33,14 +33,19 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // ));
 }
 
-fn check_for_catch_fish_events(
+fn handle_audio_events<S, T>(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut catch_fish_event: EventReader<CatchFishEvent>,
-) {
-    for _ in catch_fish_event.read() {
+    mut event_reader: EventReader<T>,
+    audio_path: S,
+)
+    where
+    T: Event,
+    S: Into<&'static str> + std::marker::Copy
+{
+    for _ in event_reader.read() {
         commands.spawn(AudioBundle {
-            source: asset_server.load("audio/pop-2.ogg"),
+            source: asset_server.load(audio_path.into()),
             settings: PlaybackSettings {
                 mode: PlaybackMode::Despawn,
                 volume: Volume::new_absolute(0.5),
@@ -48,6 +53,14 @@ fn check_for_catch_fish_events(
             },
         });
     }
+}
+
+fn check_for_catch_fish_events(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut catch_fish_event: EventReader<CatchFishEvent>,
+) {
+    handle_audio_events(commands, asset_server, catch_fish_event, "audio/pop-2.ogg");
 }
 
 fn check_for_drop_fish_events(
@@ -55,16 +68,7 @@ fn check_for_drop_fish_events(
     asset_server: Res<AssetServer>,
     mut drop_fish_event: EventReader<DropFishEvent>,
 ) {
-    for _ in drop_fish_event.read() {
-        commands.spawn(AudioBundle {
-            source: asset_server.load("audio/drop-2.ogg"),
-            settings: PlaybackSettings {
-                mode: PlaybackMode::Despawn,
-                volume: Volume::new_absolute(0.5),
-                ..default()
-            },
-        });
-    }
+    handle_audio_events(commands, asset_server, drop_fish_event, "audio/drop-2.ogg");
 }
 
 fn check_for_fish_deposit_events(
@@ -72,14 +76,13 @@ fn check_for_fish_deposit_events(
     asset_server: Res<AssetServer>,
     mut deposit_fish_event: EventReader<DepositFishEvent>,
 ) {
-    for _ in deposit_fish_event.read() {
-        commands.spawn(AudioBundle {
-            source: asset_server.load("audio/pop-1.ogg"),
-            settings: PlaybackSettings {
-                mode: PlaybackMode::Despawn,
-                volume: Volume::new_absolute(0.5),
-                ..default()
-            },
-        });
-    }
+    handle_audio_events(commands, asset_server, deposit_fish_event, "audio/pop-1.ogg");
+}
+
+fn check_for_trash_collision_events (
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut trash_collision_event: EventReader<TrashCollisionEvent>,
+) {
+    handle_audio_events(commands, asset_server, trash_collision_event, "audio/pop-1.ogg");
 }

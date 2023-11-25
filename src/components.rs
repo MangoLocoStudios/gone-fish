@@ -108,6 +108,3 @@ pub struct Acceleration(pub(crate) Vec3);
 
 #[derive(Component)]
 pub struct BGMPlayer;
-
-#[derive(Component)]
-pub struct FoleyPlayer;

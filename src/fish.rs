@@ -373,7 +373,7 @@ pub fn check_for_boat_collisions(
                     if (weight.current + fish_storage.current) > fish_storage.max {
                         *state = FishState::Swimming;
 
-                        drop_fish_event.send(DropFishEvent);
+                        drop_fish_event.send_default();
                         println!(
                             "[DEBUG] Fish {:?} was too heavy, weighing at {} - current weight {} - max weight {}",
                             (fish_variant, weight), weight.current, fish_storage.current, fish_storage.max

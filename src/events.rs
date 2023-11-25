@@ -19,10 +19,10 @@ pub struct PortCollisionEvent {
     pub collision_direction: Collision,
 }
 
-#[derive(Event)]
+#[derive(Event, Default)]
 pub struct DepositFishEvent;
 
-#[derive(Event)]
+#[derive(Event, Default)]
 pub struct DropFishEvent;
 
 #[derive(Event)]

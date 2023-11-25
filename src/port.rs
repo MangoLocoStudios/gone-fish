@@ -65,7 +65,7 @@ fn check_for_port_collisions(
     }
 
     for _ in ev_port_collison.read() {
-        ev_deposit.send(DepositFishEvent);
+        ev_deposit.send_default();
 
         println!("[DEBUG] Depositing fish");
         for fish in &player_fish.fish {

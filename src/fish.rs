@@ -402,7 +402,10 @@ pub fn check_for_boat_collisions(
 pub fn check_for_rod_collisions(
     mut fish_collision_with_rod_event: EventReader<FishCollisionWithRodEvent>,
     mut reeling_fish_event: EventWriter<ReelingFishEvent>,
-    mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), (With<Fish>, Without<Invincibility>)>,
+    mut fish_query: Query<
+        (Entity, &mut FishState, &FishVariant, &Weight),
+        (With<Fish>, Without<Invincibility>),
+    >,
 ) {
     for ev in fish_collision_with_rod_event.read() {
         for (fish, mut state, fish_variant, weight) in &mut fish_query {
@@ -415,7 +418,6 @@ pub fn check_for_rod_collisions(
             });
 
             *state = FishState::Caught
-
         }
     }
 }

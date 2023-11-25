@@ -32,3 +32,14 @@ impl Default for PortStorage {
         }
     }
 }
+
+#[derive(Resource)]
+pub struct AudioSettings {
+    pub volume: f32,
+}
+
+impl Default for AudioSettings {
+    fn default() -> Self {
+        Self { volume: 0.5 }
+    }
+}

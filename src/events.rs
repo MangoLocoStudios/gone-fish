@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::Collision;
+use crate::components::Weight;
+use crate::fish::FishVariant;
 
 #[derive(Event, Default)]
 pub struct BoatCollisionEvent;
@@ -21,4 +23,7 @@ pub struct PortCollisionEvent {
 pub struct DepositFishEvent;
 
 #[derive(Event)]
-pub struct CatchFishEvent;
+pub struct CatchFishEvent {
+    pub weight: Weight,
+    pub fish_variant: FishVariant
+}

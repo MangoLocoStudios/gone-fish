@@ -17,6 +17,7 @@ use rand::{
     Rng,
 };
 use std::slice::Iter;
+use crate::events::CatchFishEvent;
 
 #[derive(Component, Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum FishVariant {
@@ -174,6 +175,7 @@ pub struct FishPlugin;
 impl Plugin for FishPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<FishCollisionWithRodEvent>()
+            .add_event::<CatchFishEvent>()
             .init_resource::<AliveFish>()
             .add_systems(OnEnter(Game), setup)
             .add_systems(
@@ -354,6 +356,7 @@ pub fn cull_fish(
 pub fn check_for_boat_collisions(
     mut commands: Commands,
     mut boat_collision_event: EventReader<BoatCollisionEvent>,
+    mut catch_fish_event: EventWriter<CatchFishEvent>,
     mut player_query: Query<&mut FishStorage, With<Player>>,
     mut fish_stored: ResMut<PlayerFishStored>,
     mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), With<Fish>>,
@@ -376,6 +379,10 @@ pub fn check_for_boat_collisions(
                         fish_storage.current += weight.current;
                         fish_stored.fish.push((*fish_variant, *weight));
                         commands.entity(fish).despawn();
+                        catch_fish_event.send(CatchFishEvent {
+                            weight: *weight,
+                            fish_variant: *fish_variant
+                        });
 
                         println!(
                             "[DEBUG] Fish caught {:?} - current weight {} - max weight {}",

@@ -1,36 +1,47 @@
-use bevy::audio::Volume;
+use bevy::audio::{PlaybackMode, Volume};
 use bevy::prelude::*;
 use crate::components::{BGMPlayer, FoleyPlayer};
+use crate::events::CatchFishEvent;
+use crate::GameState::Game;
 
 pub struct AudioPlugin;
 
 impl Plugin for AudioPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Startup, setup);
+            .add_systems(Startup, setup)
+            .add_systems(Update, (check_for_catch_fish_events).run_if(in_state(Game)));
     }
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((
-        AudioBundle {
-            source: asset_server.load("sounds/Windless Slopes.ogg"),
-            settings: PlaybackSettings {
-                volume: Volume::new_absolute(0.5),
-                ..default()
-            }
-        },
-        BGMPlayer,
-    ));
+    // commands.spawn((
+    //     AudioBundle {
+    //         source: asset_server.load("sounds/Windless Slopes.ogg"),
+    //         settings: PlaybackSettings {
+    //             volume: Volume::new_absolute(0.5),
+    //             ..default()
+    //         }
+    //     },
+    //     BGMPlayer,
+    // ));
+}
 
-    commands.spawn((
-        AudioBundle {
-            source: asset_server.load("sounds/Windless Slopes.ogg"),
-            settings: PlaybackSettings {
-                volume: Volume::new_absolute(0.5),
-                ..default()
+fn check_for_catch_fish_events(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut catch_fish_event: EventReader<CatchFishEvent>,
+) {
+   for _ in catch_fish_event.read() {
+        commands.spawn(
+            AudioBundle {
+                source: asset_server.load("audio/pop-1.ogg"),
+                settings: PlaybackSettings {
+                    mode: PlaybackMode::Despawn,
+                    volume: Volume::new_absolute(0.5),
+                    ..default()
+                },
             }
-        },
-        FoleyPlayer,
-    ));
+        );
+   }
 }

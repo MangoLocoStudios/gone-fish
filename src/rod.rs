@@ -113,16 +113,21 @@ fn cast_rod(
             LineToPlayer,
         ));
 
-        commands
-            .spawn(SpriteBundle {
+        commands.spawn((
+            SpriteBundle {
                 sprite: Sprite {
                     color: Color::BLACK,
                     custom_size: Some(Vec2::new(2.0, 0.0)), // Thin and initially of zero length
                     ..default()
                 },
+                transform: Transform {
+                    translation: Vec3::new(player.translation.x, 0., 10.),
+                    ..default()
+                },
                 ..default()
-            })
-            .insert(Line);
+            },
+            Line,
+        ));
     }
 }
 

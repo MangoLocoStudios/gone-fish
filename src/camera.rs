@@ -36,20 +36,14 @@ fn camera(
     camera.scale = (diff.abs() / 1000.) + 0.5;
     camera.scale = camera.scale.clamp(0.5, 3.);
 
-    let mut new_transform = Vec3::new(0., 0., camera_transform.translation.z);
+    let mut new_transform = Vec3::new(0., 100., camera_transform.translation.z);
 
     if let Ok(rod) = rod {
-        if rod.translation.y < -205. {
-            new_transform.y = 50.;
-
-            if camera_transform.translation.y > rod.translation.y {
-                new_transform.y = -50.;
-            }
-        } else if camera_transform.translation.y < 0. {
-            new_transform.y = 100.;
+        if camera_transform.translation.y > rod.translation.y {
+            new_transform.y = -100.;
         }
-    } else if camera_transform.translation.y < 0. {
-        new_transform.y = 100.;
+    } else if camera_transform.translation.y > 0. {
+        new_transform.y = 0.;
     }
 
     camera_transform.translation += new_transform * time.delta_seconds();

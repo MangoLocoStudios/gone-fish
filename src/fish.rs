@@ -106,7 +106,7 @@ impl FishVariant {
             FishVariant::Three => 3.0..4.,
             FishVariant::Four => 3.5..5.,
             FishVariant::Five => 5.0..8.,
-            FishVariant::Six => 10.0..15.,
+            FishVariant::Six => 27.0..55.,
             FishVariant::Seven => 15.0..20.,
             FishVariant::Eight => 25.0..30.,
         }
@@ -300,6 +300,7 @@ pub fn fish_boundary(
         if can_die.dying {
             return;
         }
+
         // Flip the thing when at edge
         if transform.translation.x < -1800. {
             *direction = Direction::Right;

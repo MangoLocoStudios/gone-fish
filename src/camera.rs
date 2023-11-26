@@ -36,11 +36,11 @@ fn camera(
     camera.scale = (diff.abs() / 1000.) + 0.5;
     camera.scale = camera.scale.clamp(0.5, 3.);
 
-    let mut new_transform = Vec3::new(0., 100., camera_transform.translation.z);
+    let mut new_transform = Vec3::new(0., 65., camera_transform.translation.z);
 
     if let Ok(rod) = rod {
         if camera_transform.translation.y > rod.translation.y {
-            new_transform.y = -100.;
+            new_transform.y = -65.;
         }
     } else if camera_transform.translation.y > 0. {
         new_transform.y = 0.;

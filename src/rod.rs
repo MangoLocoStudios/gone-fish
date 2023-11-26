@@ -31,7 +31,7 @@ pub enum RodVariant {
 impl RodVariant {
     pub fn get_rod_properties(self) -> RodProperties {
         let (length, pull) = match self {
-            RodVariant::StickWithString => (200., 100.),
+            RodVariant::StickWithString => (800., 100.),
             RodVariant::TwigAndTwineTackler => (335., 105.),
             RodVariant::ReedReelRig => (450., 115.),
             RodVariant::WillowWhiskerWeaver => (650., 118.),
@@ -300,21 +300,20 @@ fn rod_movement(
 
     let rod_stats = rod_stats.get_rod_properties();
 
-    // Move rod up
-    if keyboard_input.just_pressed(KeyCode::Space) && acceleration.0.y < 150. {
-        acceleration.0.y += rod_stats.pull;
-    }
-
     // Keep rod x aligned with player
     transform.translation.x = player.translation.x;
 
-    // Constantly move the rod downwards as long as it's above
-    // the length of the rod
-    transform.translation += (velocity.0 + acceleration.0) * time.delta_seconds();
+    // Move rod
+    if keyboard_input.just_pressed(KeyCode::Space) && acceleration.0.y < 150. {
+        acceleration.0.y += rod_stats.pull * 1.5;
+    }
+
+    let calculated_velocity = velocity.0 + acceleration.0;
+    transform.translation += calculated_velocity * time.delta_seconds();
 
     // Decay acceleration
     if acceleration.0.y > 0. {
-        acceleration.0.y -= 5.;
+        acceleration.0.y -= 3.;
     } else {
         acceleration.0.y = 0.;
     }

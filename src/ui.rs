@@ -19,6 +19,9 @@ impl Plugin for UIPlugin {
 struct StorageText;
 
 #[derive(Component)]
+struct ControlsText;
+
+#[derive(Component)]
 struct StorageIcon;
 
 fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -26,6 +29,12 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         font: asset_server.load("fonts/Pixellari.ttf"),
         font_size: 40.0,
         color: Color::GOLD,
+    };
+
+    let control_text_style = TextStyle {
+        font: asset_server.load("fonts/Pixellari.ttf"),
+        font_size: 20.0,
+        color: Color::WHITE,
     };
 
     // UI Canvas
@@ -71,6 +80,28 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                             TextSection::from_style(ui_text_style.clone()),
                         ]),
                         StorageText,
+                    ));
+                });
+        })
+        // Controls
+        .with_children(|parent| {
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        position_type: PositionType::Absolute,
+                        top: Val::Px(10.0),
+                        right: Val::Px(10.0),
+                        ..default()
+                    },
+                    ..default()
+                })
+                .with_children(|parent| {
+                    parent.spawn((
+                        TextBundle::from_sections([TextSection::new(
+                            "Left/Right - Move boat\nDown - Cast rod\nSpace - Reel rod",
+                            control_text_style,
+                        )]),
+                        ControlsText,
                     ));
                 });
         });

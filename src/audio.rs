@@ -2,17 +2,18 @@ use crate::components::BGMPlayer;
 use crate::events::{
     CatchFishEvent, DepositFishEvent, DropFishEvent, ReelingFishEvent, TrashCollisionEvent,
 };
-use crate::resources::AudioSettings;
 use crate::GameState::Game;
-use bevy::audio::{PlaybackMode, Volume};
+use bevy::audio::{PlaybackMode, Volume as BevyVolume};
 use bevy::prelude::*;
 
 pub struct AudioPlugin;
 
+#[derive(Resource, Debug, Component, PartialEq, Clone, Copy)]
+pub struct Volume(pub(crate) f32);
+
 impl Plugin for AudioPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<AudioSettings>()
-            .add_systems(Startup, setup)
+        app.add_systems(Startup, setup)
             .add_systems(
                 Update,
                 (
@@ -23,21 +24,18 @@ impl Plugin for AudioPlugin {
                     check_for_reeling_events,
                 )
                     .run_if(in_state(Game)),
-            );
+            )
+            .add_systems(Update, check_for_volume_events);
     }
 }
 
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    audio_settings: Res<AudioSettings>,
-) {
+fn setup(volume: Res<Volume>, mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         AudioBundle {
             source: asset_server.load("audio/bg-1.ogg"),
             settings: PlaybackSettings {
                 mode: PlaybackMode::Loop,
-                volume: Volume::new_absolute(audio_settings.volume),
+                volume: BevyVolume::new_absolute(volume.0),
                 ..default()
             },
         },
@@ -54,18 +52,29 @@ fn handle_audio_events<S, T>(
     T: Event,
     S: Into<&'static str> + std::marker::Copy,
 {
-    let asset_server = world.get_resource::<AssetServer>().unwrap();
-    let audio_settings = world.get_resource::<AudioSettings>().unwrap();
+    let asset_server = world
+        .get_resource::<AssetServer>()
+        .expect("AssetServer to exist.");
+    let volume = world.get_resource::<Volume>().expect("Volume to exist.");
 
     for _ in event_reader.read() {
         commands.spawn(AudioBundle {
             source: asset_server.load(audio_path.into()),
             settings: PlaybackSettings {
                 mode: PlaybackMode::Despawn,
-                volume: Volume::new_absolute(audio_settings.volume),
+                volume: BevyVolume::new_absolute(volume.0),
                 ..default()
             },
         });
+    }
+}
+
+fn check_for_volume_events(
+    volume: Res<Volume>,
+    music_controller: Query<&AudioSink, With<BGMPlayer>>,
+) {
+    if let Ok(sink) = music_controller.get_single() {
+        sink.set_volume(volume.0);
     }
 }
 

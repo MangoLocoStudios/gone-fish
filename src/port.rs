@@ -103,41 +103,42 @@ fn check_for_port_collisions(
         player_storage.current = 0.;
 
         // Trigger Upgrades
-        let new_max = match port_fish.weight {
+        let (new_max, next_upgrade) = match port_fish.weight {
             w if w > 150. => {
                 *rod_variant = RodVariant::CarbonCaster9000;
-                Some(75.)
+                (Some(75.), Some(150.))
             }
             w if w > 100. => {
                 *rod_variant = RodVariant::GraphiteGuardian;
-                Some(55.)
+                (Some(55.), Some(100.))
             }
             w if w > 75. => {
                 *rod_variant = RodVariant::FiberFusion;
-                Some(30.)
+                (Some(30.), Some(75.))
             }
             w if w > 50. => {
                 *rod_variant = RodVariant::BambooBlisscaster;
-                Some(20.)
+               (Some(20.), Some(50.))
             }
             w if w > 25. => {
                 *rod_variant = RodVariant::WillowWhiskerWeaver;
-                Some(15.)
+                (Some(15.), Some(25.))
             }
             w if w > 10. => {
                 *rod_variant = RodVariant::ReedReelRig;
-                Some(10.)
+                (Some(10.), Some(10.))
             }
             w if w > 4. => {
                 *rod_variant = RodVariant::TwigAndTwineTackler;
-                Some(6.)
+                (Some(6.), Some(4.))
             }
-            _ => None,
+            _ => (None, None),
         };
 
         ev_deposit.send(DepositFishEvent {
             port_weight: port_fish.weight,
             new_max,
+            next_upgrade
         });
 
         FishStorage::update_storage(0., new_max, &mut player_storage);
@@ -150,7 +151,7 @@ fn setup_port_ui(
     let mut stui = port_ui_query.single_mut();
 
     stui.sections[0].value = "0.00 kg /".into();
-    stui.sections[1].value = " 3 kg".into();
+    stui.sections[1].value = " 4 kg".into();
 }
 
 fn update_port_ui(
@@ -163,7 +164,7 @@ fn update_port_ui(
 
         stui.sections[0].value = format!("{:.2} kg /", current);
 
-        if let max = Some(event.new_max) {
+        if let Some(max) = event.next_upgrade {
             stui.sections[1].value = format!(" {:?} kg", max);
         }
     }

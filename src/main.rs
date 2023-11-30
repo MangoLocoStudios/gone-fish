@@ -21,6 +21,7 @@ use crate::menu::MenuPlugin;
 use crate::systems::animate_sprite;
 use crate::ui::UIPlugin;
 use crate::GameState::Game;
+use audio::Volume;
 use bevy::{prelude::*, window::WindowTheme};
 use systems::tick_decay_timers;
 
@@ -35,6 +36,7 @@ enum GameState {
 
 fn main() {
     App::new()
+        .insert_resource(Volume(0.5))
         .add_state::<GameState>()
         .add_plugins((
             DefaultPlugins

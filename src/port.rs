@@ -106,25 +106,25 @@ fn check_for_port_collisions(
         let (new_max, next_upgrade) = match port_fish.weight {
             w if w > 150. => {
                 *rod_variant = RodVariant::CarbonCaster9000;
-                (Some(75.), Some(150.))
+                (Some(1000.), Some(150.))
             }
-            w if w > 100. => {
+            w if w > 200. => {
                 *rod_variant = RodVariant::GraphiteGuardian;
-                (Some(55.), Some(100.))
+                (Some(200.), Some(100.))
             }
-            w if w > 75. => {
+            w if w > 150. => {
                 *rod_variant = RodVariant::FiberFusion;
-                (Some(30.), Some(75.))
+                (Some(100.), Some(75.))
             }
             w if w > 50. => {
                 *rod_variant = RodVariant::BambooBlisscaster;
-               (Some(20.), Some(50.))
+               (Some(70.), Some(50.))
             }
-            w if w > 25. => {
+            w if w > 15. => {
                 *rod_variant = RodVariant::WillowWhiskerWeaver;
-                (Some(15.), Some(25.))
+                (Some(30.), Some(25.))
             }
-            w if w > 10. => {
+            w if w > 8. => {
                 *rod_variant = RodVariant::ReedReelRig;
                 (Some(10.), Some(10.))
             }

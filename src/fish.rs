@@ -50,35 +50,35 @@ impl FishVariant {
         (
             match self {
                 FishVariant::One => {
-                    let texture_handle = asset_server.load("craftpix/objects/Catch/1.png");
+                    let texture_handle = asset_server.load("craftpix/objects/catch/1.png");
                     TextureAtlas::from_grid(texture_handle, Vec2::new(12., 6.), 2, 1, None, None)
                 }
                 FishVariant::Two => {
-                    let texture_handle = asset_server.load("craftpix/objects/Catch/2.png");
+                    let texture_handle = asset_server.load("craftpix/objects/catch/2.png");
                     TextureAtlas::from_grid(texture_handle, Vec2::new(16., 12.), 2, 1, None, None)
                 }
                 FishVariant::Three => {
-                    let texture_handle = asset_server.load("craftpix/objects/Catch/3.png");
+                    let texture_handle = asset_server.load("craftpix/objects/catch/3.png");
                     TextureAtlas::from_grid(texture_handle, Vec2::new(20., 12.), 2, 1, None, None)
                 }
                 FishVariant::Four => {
-                    let texture_handle = asset_server.load("craftpix/objects/Catch/4.png");
+                    let texture_handle = asset_server.load("craftpix/objects/catch/4.png");
                     TextureAtlas::from_grid(texture_handle, Vec2::new(26., 12.), 2, 1, None, None)
                 }
                 FishVariant::Five => {
-                    let texture_handle = asset_server.load("craftpix/objects/Catch/5.png");
+                    let texture_handle = asset_server.load("craftpix/objects/catch/5.png");
                     TextureAtlas::from_grid(texture_handle, Vec2::new(30., 12.), 2, 1, None, None)
                 }
                 FishVariant::Six => {
-                    let texture_handle = asset_server.load("craftpix/objects/Catch/6.png");
+                    let texture_handle = asset_server.load("craftpix/objects/catch/6.png");
                     TextureAtlas::from_grid(texture_handle, Vec2::new(54., 22.), 2, 1, None, None)
                 }
                 FishVariant::Seven => {
-                    let texture_handle = asset_server.load("craftpix/objects/Catch/7.png");
+                    let texture_handle = asset_server.load("craftpix/objects/catch/7.png");
                     TextureAtlas::from_grid(texture_handle, Vec2::new(30., 12.), 2, 1, None, None)
                 }
                 FishVariant::Eight => {
-                    let texture_handle = asset_server.load("craftpix/objects/Catch/8.png");
+                    let texture_handle = asset_server.load("craftpix/objects/catch/8.png");
                     TextureAtlas::from_grid(texture_handle, Vec2::new(28., 24.), 2, 1, None, None)
                 }
             },

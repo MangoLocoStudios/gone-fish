@@ -64,22 +64,38 @@ struct Line;
 
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<BoatCollisionEvent>().add_systems(
-            Update,
-            (
-                cast_rod,
-                rod_movement,
-                check_for_boat_collisions,
-                check_for_fish_collisions,
-                check_for_trash_collisions,
-                update_line,
-            )
-                .run_if(in_state(Game)),
-        );
+        app.add_event::<BoatCollisionEvent>()
+            .add_systems(Startup, setup)
+            .add_systems(
+                Update,
+                (
+                    cast_rod,
+                    rod_movement,
+                    check_for_boat_collisions,
+                    check_for_fish_collisions,
+                    check_for_trash_collisions,
+                    update_line,
+                )
+                    .run_if(in_state(Game)),
+            );
     }
 }
 
 const ROD_MOVEMENT_DOWN: f32 = 75.0;
+
+fn setup(mut _commands: Commands, _asset_server: Res<AssetServer>) {
+    // Hack to load in the fish_hook.png file when running webasm
+    #[cfg(target_arch = "wasm32")]
+    _commands.spawn((SpriteBundle {
+        texture: _asset_server.load("fish_hook.png"),
+        transform: Transform {
+            translation: Vec3::new(0., 500., -200.),
+            scale: Vec3::splat(1.5),
+            ..default()
+        },
+        ..default()
+    },));
+}
 
 fn cast_rod(
     mut commands: Commands,
@@ -269,7 +285,7 @@ fn check_for_trash_collisions(
             rod.translation,
             assets
                 .get(image)
-                .expect("boat to always have an available image")
+                .expect("rod to always have an available image")
                 .size()
                 .as_vec2()
                 * rod.scale.truncate(),

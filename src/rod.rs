@@ -31,7 +31,7 @@ pub enum RodVariant {
 impl RodVariant {
     pub fn get_rod_properties(self) -> RodProperties {
         let (length, pull) = match self {
-            RodVariant::StickWithString => (200., 100.),
+            RodVariant::StickWithString => (800., 100.),
             RodVariant::TwigAndTwineTackler => (335., 105.),
             RodVariant::ReedReelRig => (450., 115.),
             RodVariant::WillowWhiskerWeaver => (650., 118.),
@@ -319,7 +319,7 @@ fn rod_movement(
 
     // Decay acceleration
     if acceleration.0.y > 0. {
-        acceleration.0.y -= 2.;
+        acceleration.0.y -= 3.;
     } else {
         acceleration.0.y = 0.;
     }

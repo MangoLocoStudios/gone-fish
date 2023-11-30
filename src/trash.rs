@@ -16,8 +16,8 @@ pub enum TrashVariant {
 impl TrashVariant {
     pub fn image(self, asset_server: AssetServer) -> Handle<Image> {
         match self {
-            TrashVariant::Newspaper => asset_server.load("craftpix/objects/Catch/Box.png"),
-            TrashVariant::OldShoe => asset_server.load("craftpix/objects/Catch/Barrel.png"),
+            TrashVariant::Newspaper => asset_server.load("craftpix/objects/catch/Box.png"),
+            TrashVariant::OldShoe => asset_server.load("craftpix/objects/catch/Barrel.png"),
         }
     }
 }

@@ -252,12 +252,13 @@ fn check_for_fish_collisions(
 }
 
 fn check_for_trash_collisions(
-    mut rod_query: Query<(&Transform, &mut RodState), With<Rod>>,
+    assets: Res<Assets<Image>>,
+    mut rod_query: Query<(&Transform, &mut RodState, &Handle<Image>), With<Rod>>,
     trash_query: Query<&Transform, With<Trash>>,
     mut collision_events: EventWriter<TrashCollisionEvent>,
 ) {
-    let (rod, mut state) = match rod_query.get_single_mut() {
-        Ok((rod, state)) => (rod, state),
+    let (rod, mut state, image) = match rod_query.get_single_mut() {
+        Ok((rod, state, image)) => (rod, state, image),
         Err(_) => return,
     };
 
@@ -266,7 +267,12 @@ fn check_for_trash_collisions(
             trash_transform.translation,
             trash_transform.scale.truncate(),
             rod.translation,
-            rod.scale.truncate(),
+            assets
+                .get(image)
+                .expect("boat to always have an available image")
+                .size()
+                .as_vec2()
+                * rod.scale.truncate(),
         )
         .is_none()
         {

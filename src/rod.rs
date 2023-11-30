@@ -31,7 +31,7 @@ pub enum RodVariant {
 impl RodVariant {
     pub fn get_rod_properties(self) -> RodProperties {
         let (length, pull) = match self {
-            RodVariant::StickWithString => (800., 100.),
+            RodVariant::StickWithString => (200., 100.),
             RodVariant::TwigAndTwineTackler => (335., 105.),
             RodVariant::ReedReelRig => (450., 115.),
             RodVariant::WillowWhiskerWeaver => (650., 118.),

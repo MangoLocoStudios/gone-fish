@@ -12,6 +12,9 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct Port;
 
+#[derive(Component)]
+pub struct PortUI;
+
 pub struct PortPlugin;
 
 impl Plugin for PortPlugin {
@@ -20,7 +23,8 @@ impl Plugin for PortPlugin {
             .add_event::<PortCollisionEvent>()
             .add_event::<DepositFishEvent>()
             .add_systems(Startup, setup)
-            .add_systems(Update, (check_for_port_collisions).run_if(in_state(Game)));
+            .add_systems(OnEnter(Game), setup_port_ui)
+            .add_systems(Update, (check_for_port_collisions, update_port_ui).run_if(in_state(Game)));
     }
 }
 
@@ -42,6 +46,12 @@ fn setup(mut commands: Commands, window: Query<&mut Window>, asset_server: Res<A
         },
     ));
 
+    let ui_text_style = TextStyle {
+        font: asset_server.load("fonts/Pixellari.ttf"),
+        font_size: 10.0,
+        color: Color::WHITE,
+    };
+
     commands.spawn(SpriteBundle {
         texture: asset_server.load("craftpix/objects/Fishbarrel2.png"),
         transform: Transform {
@@ -50,7 +60,20 @@ fn setup(mut commands: Commands, window: Query<&mut Window>, asset_server: Res<A
             ..default()
         },
         ..default()
-    });
+    })
+        // Fish Storage
+        .with_children(|parent| {
+            parent.spawn((Text2dBundle {
+                text: Text::from_sections([
+                    TextSection::from_style(ui_text_style.clone()),
+                    TextSection::from_style(ui_text_style.clone()),
+                ])
+                    .with_alignment(TextAlignment::Center),
+                transform: Transform::from_xyz(0.0, 0.0, 0.0),
+                ..default()
+            },
+            PortUI));
+        });
 }
 
 fn check_for_port_collisions(
@@ -65,8 +88,6 @@ fn check_for_port_collisions(
     }
 
     for _ in ev_port_collison.read() {
-        ev_deposit.send_default();
-
         println!("[DEBUG] Depositing fish");
         for fish in &player_fish.fish {
             if let Some(count) = port_fish.fish.get_mut(&fish.0) {
@@ -80,8 +101,6 @@ fn check_for_port_collisions(
         port_fish.weight += player_storage.current;
 
         player_storage.current = 0.;
-
-        println!("[DEBUG] {}", port_fish.weight);
 
         // Trigger Upgrades
         let new_max = match port_fish.weight {
@@ -116,6 +135,36 @@ fn check_for_port_collisions(
             _ => None,
         };
 
+        ev_deposit.send(DepositFishEvent {
+            port_weight: port_fish.weight,
+            new_max,
+        });
+
         FishStorage::update_storage(0., new_max, &mut player_storage);
+    }
+}
+
+fn setup_port_ui(
+    mut port_ui_query: Query<&mut Text, With<PortUI>>,
+) {
+    let mut stui = port_ui_query.single_mut();
+
+    stui.sections[0].value = "0.00 kg /".into();
+    stui.sections[1].value = " 3 kg".into();
+}
+
+fn update_port_ui(
+    mut ev_deposit: EventReader<DepositFishEvent>,
+    mut port_ui_query: Query<&mut Text, With<PortUI>>,
+) {
+    for event in ev_deposit.read() {
+        let current = event.port_weight;
+        let mut stui = port_ui_query.single_mut();
+
+        stui.sections[0].value = format!("{:.2} kg /", current);
+
+        if let max = Some(event.new_max) {
+            stui.sections[1].value = format!(" {:?} kg", max);
+        }
     }
 }

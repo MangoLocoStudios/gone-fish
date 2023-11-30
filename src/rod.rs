@@ -330,5 +330,4 @@ fn rod_movement(
     } else {
         velocity.0 = Vec3::new(0., -ROD_MOVEMENT_DOWN, 0.);
     }
-
 }

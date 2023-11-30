@@ -101,16 +101,17 @@ impl FishVariant {
 
     pub fn get_weight_range(self) -> std::ops::Range<f32> {
         match self {
-            FishVariant::One => 0.1..1.,
-            FishVariant::Two => 1.5..3.,
-            FishVariant::Three => 3.0..4.,
-            FishVariant::Four => 3.5..5.,
-            FishVariant::Five => 5.0..8.,
-            FishVariant::Six => 27.0..55.,
-            FishVariant::Seven => 15.0..20.,
-            FishVariant::Eight => 25.0..30.,
+            FishVariant::One => 0.1 ..0.3,
+            FishVariant::Two => 0.3 ..1.,
+            FishVariant::Three => 3. ..6.,
+            FishVariant::Four => 6. ..15.,
+            FishVariant::Five => 15. ..25.,
+            FishVariant::Six => 100. ..500.,
+            FishVariant::Seven => 35. ..70.,
+            FishVariant::Eight => 80. ..150.,
         }
     }
+    
 }
 
 impl Distribution<FishVariant> for Standard {

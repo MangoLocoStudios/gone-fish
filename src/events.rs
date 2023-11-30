@@ -20,7 +20,11 @@ pub struct PortCollisionEvent {
 }
 
 #[derive(Event, Default)]
-pub struct DepositFishEvent;
+pub struct DepositFishEvent {
+    pub port_weight: f32,
+    pub new_max: Option<f32>,
+    pub next_upgrade: Option<f32>,
+}
 
 #[derive(Event, Default)]
 pub struct DropFishEvent;

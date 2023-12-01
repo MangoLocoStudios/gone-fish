@@ -1,5 +1,0 @@
-/Users/jeynesb/Desktop/gone-fish/target/debug/build/libc-c1d249f4df18cb64/build_script_build-c1d249f4df18cb64: /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.150/build.rs
-
-/Users/jeynesb/Desktop/gone-fish/target/debug/build/libc-c1d249f4df18cb64/build_script_build-c1d249f4df18cb64.d: /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.150/build.rs
-
-/Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.150/build.rs:

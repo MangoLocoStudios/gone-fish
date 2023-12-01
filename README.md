@@ -11,6 +11,7 @@ Take a play through the other games submitted at https://itch.io/jam/game-off-20
 Left/Right Arrow - Move boat
 Down Arrow - Cast rod
 Spacebar - Reel-in rod
+Escape - Pause the game
 
 This game was created using Bevy Engine as a means to learn Rust.
 

@@ -51,7 +51,7 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .with_children(|parent| {
                     parent.spawn((
                         TextBundle::from_sections([TextSection::new(
-                            "Left/Right Arrows - Move boat\nDown Arrow - Cast rod\nSpace - Jerk rod upwards",
+                            "Left/Right Arrows - Move boat\nDown Arrow - Cast rod\nSpace - Jerk rod upwards\nEscape - Pause the game",
                             control_text_style,
                         )]),
                         ControlsText,

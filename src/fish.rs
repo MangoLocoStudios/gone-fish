@@ -1,5 +1,5 @@
 use crate::components::CameraShake;
-use crate::events::{CatchFishEvent, DropFishEvent, ReelingFishEvent};
+use crate::events::{CatchFishEvent, DropFishEvent, ReelingFishEvent, WeightLimitEvent};
 use crate::{
     components::{
         AnimationIndices, AnimationTimer, CanDie, DecayTimer, Direction, FishStorage,
@@ -358,16 +358,17 @@ pub fn cull_fish(
 
 pub fn check_for_boat_collisions(
     mut commands: Commands,
-    mut boat_collision_event: EventReader<BoatCollisionEvent>,
-    mut catch_fish_event: EventWriter<CatchFishEvent>,
-    mut drop_fish_event: EventWriter<DropFishEvent>,
+    mut ev_boat_collision: EventReader<BoatCollisionEvent>,
+    mut ev_catch_fish: EventWriter<CatchFishEvent>,
+    mut ev_drop_fish: EventWriter<DropFishEvent>,
+    mut ev_weight_limit: EventWriter<WeightLimitEvent>,
     mut player_query: Query<&mut FishStorage, With<Player>>,
     mut fish_stored: ResMut<PlayerFishStored>,
     mut fish_query: Query<(Entity, &mut FishState, &FishVariant, &Weight), With<Fish>>,
 ) {
     let mut fish_storage = player_query.single_mut();
 
-    for _ in boat_collision_event.read() {
+    for _ in ev_boat_collision.read() {
         for (fish, mut state, fish_variant, weight) in &mut fish_query {
             match *state {
                 FishState::Swimming => {}
@@ -375,24 +376,16 @@ pub fn check_for_boat_collisions(
                     if (weight.current + fish_storage.current) > fish_storage.max {
                         *state = FishState::Swimming;
 
-                        drop_fish_event.send_default();
-                        println!(
-                            "[DEBUG] Fish {:?} was too heavy, weighing at {} - current weight {} - max weight {}",
-                            (fish_variant, weight), weight.current, fish_storage.current, fish_storage.max
-                        );
+                        ev_drop_fish.send_default();
+                        ev_weight_limit.send_default();
                     } else {
                         fish_storage.current += weight.current;
                         fish_stored.fish.push((*fish_variant, *weight));
                         commands.entity(fish).despawn();
-                        catch_fish_event.send(CatchFishEvent {
+                        ev_catch_fish.send(CatchFishEvent {
                             weight: *weight,
                             fish_variant: *fish_variant,
                         });
-
-                        println!(
-                            "[DEBUG] Fish caught {:?} - current weight {} - max weight {}",
-                            fish_stored.fish, fish_storage.current, fish_storage.max
-                        );
                     }
                 }
             }
@@ -401,19 +394,19 @@ pub fn check_for_boat_collisions(
 }
 
 pub fn check_for_rod_collisions(
-    mut fish_collision_with_rod_event: EventReader<FishCollisionWithRodEvent>,
-    mut reeling_fish_event: EventWriter<ReelingFishEvent>,
+    mut ev_fish_collision_with_rod: EventReader<FishCollisionWithRodEvent>,
+    mut ev_reeling_fish: EventWriter<ReelingFishEvent>,
     mut fish_query: Query<
         (Entity, &mut FishState, &FishVariant, &Weight),
         (With<Fish>, Without<Invincibility>),
     >,
 ) {
-    for ev in fish_collision_with_rod_event.read() {
+    for ev in ev_fish_collision_with_rod.read() {
         for (fish, mut state, fish_variant, weight) in &mut fish_query {
             if fish != ev.fish {
                 continue;
             }
-            reeling_fish_event.send(ReelingFishEvent {
+            ev_reeling_fish.send(ReelingFishEvent {
                 weight: *weight,
                 fish_variant: *fish_variant,
             });
@@ -425,11 +418,11 @@ pub fn check_for_rod_collisions(
 
 pub fn check_for_trash_collisions(
     mut commands: Commands,
-    mut trash_collision_event: EventReader<TrashCollisionEvent>,
+    mut ev_trash_collision: EventReader<TrashCollisionEvent>,
     mut fish_query: Query<(Entity, &mut FishState), With<Fish>>,
     camera_query: Query<(Entity, &Transform), (Without<Fish>, With<Camera2d>)>,
 ) {
-    for _ in trash_collision_event.read() {
+    for _ in ev_trash_collision.read() {
         for (fish, mut state) in &mut fish_query {
             match *state {
                 FishState::Swimming => {}

@@ -60,7 +60,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run clippy
-        run: cargo clippy -- -A clippy::type_complexity -D warnings
+        run: cargo clippy -- -A clippy::type_complexity -A clippy::too-many-arguments -D warnings
 
   # Run cargo fmt --all -- --check
   format:

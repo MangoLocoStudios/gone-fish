@@ -29,6 +29,12 @@ pub struct DepositFishEvent {
 #[derive(Event, Default)]
 pub struct DropFishEvent;
 
+#[derive(Event, Default)]
+pub struct WeightLimitEvent;
+
+#[derive(Event, Default)]
+pub struct UpgradeEvent;
+
 #[derive(Event)]
 pub struct ReelingFishEvent {
     pub weight: Weight,

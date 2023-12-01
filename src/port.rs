@@ -1,4 +1,4 @@
-use crate::events::DepositFishEvent;
+use crate::events::{DepositFishEvent, UpgradeEvent};
 use crate::{
     components::FishStorage,
     events::PortCollisionEvent,
@@ -22,6 +22,7 @@ impl Plugin for PortPlugin {
         app.init_resource::<PortStorage>()
             .add_event::<PortCollisionEvent>()
             .add_event::<DepositFishEvent>()
+            .add_event::<UpgradeEvent>()
             .add_systems(Startup, setup)
             .add_systems(OnEnter(Game), setup_port_ui)
             .add_systems(
@@ -56,7 +57,7 @@ fn setup(
 
     let ui_text_style = TextStyle {
         font: asset_server.load("fonts/Pixellari.ttf"),
-        font_size: 10.0,
+        font_size: 40.0,
         color: Color::WHITE,
     };
 
@@ -71,7 +72,7 @@ fn setup(
             parts: vec![ui.clone()],
         },
         VariableCurve {
-            keyframe_timestamps: vec![0.0, 3., 6.0],
+            keyframe_timestamps: vec![0.0, 3., 6.],
             keyframes: Keyframes::Translation(vec![
                 Vec3::new(20.0, 12.0, 0.0),
                 Vec3::new(20.0, 15.0, 0.0),
@@ -103,7 +104,11 @@ fn setup(
                         TextSection::from_style(ui_text_style.clone()),
                     ])
                     .with_alignment(TextAlignment::Center),
-                    transform: Transform::from_xyz(50.0, 0.0, 0.0),
+                    transform: Transform {
+                        translation: Default::default(),
+                        rotation: Default::default(),
+                        scale: Vec3::splat(0.25),
+                    },
                     ..default()
                 },
                 ui,
@@ -115,6 +120,7 @@ fn setup(
 
 fn check_for_port_collisions(
     mut ev_deposit: EventWriter<DepositFishEvent>,
+    mut ev_upgrade: EventWriter<UpgradeEvent>,
     mut ev_port_collison: EventReader<PortCollisionEvent>,
     mut port_fish: ResMut<PortStorage>,
     mut player_fish: ResMut<PlayerFishStored>,
@@ -125,7 +131,6 @@ fn check_for_port_collisions(
     }
 
     for _ in ev_port_collison.read() {
-        println!("[DEBUG] Depositing fish");
         for fish in &player_fish.fish {
             if let Some(count) = port_fish.fish.get_mut(&fish.0) {
                 *count += 1;
@@ -142,30 +147,51 @@ fn check_for_port_collisions(
         // Trigger Upgrades
         let (new_max, next_upgrade) = match port_fish.weight {
             w if w > 1200. => {
+                if *rod_variant != RodVariant::CarbonCaster9000 {
+                    ev_upgrade.send_default();
+                }
                 *rod_variant = RodVariant::CarbonCaster9000;
                 (Some(1000.), Some(9999.))
             }
             w if w > 200. => {
+                if *rod_variant != RodVariant::GraphiteGuardian {
+                    ev_upgrade.send_default();
+                }
                 *rod_variant = RodVariant::GraphiteGuardian;
                 (Some(200.), Some(1000.))
             }
             w if w > 150. => {
+                if *rod_variant != RodVariant::FiberFusion {
+                    ev_upgrade.send_default();
+                }
                 *rod_variant = RodVariant::FiberFusion;
                 (Some(100.), Some(200.))
             }
             w if w > 50. => {
+                if *rod_variant != RodVariant::BambooBlisscaster {
+                    ev_upgrade.send_default();
+                }
                 *rod_variant = RodVariant::BambooBlisscaster;
                 (Some(70.), Some(150.))
             }
             w if w > 15. => {
+                if *rod_variant != RodVariant::WillowWhiskerWeaver {
+                    ev_upgrade.send_default();
+                }
                 *rod_variant = RodVariant::WillowWhiskerWeaver;
                 (Some(30.), Some(50.))
             }
             w if w > 8. => {
+                if *rod_variant != RodVariant::ReedReelRig {
+                    ev_upgrade.send_default();
+                }
                 *rod_variant = RodVariant::ReedReelRig;
                 (Some(10.), Some(15.))
             }
             w if w > 4. => {
+                if *rod_variant != RodVariant::TwigAndTwineTackler {
+                    ev_upgrade.send_default();
+                }
                 *rod_variant = RodVariant::TwigAndTwineTackler;
                 (Some(6.), Some(8.))
             }

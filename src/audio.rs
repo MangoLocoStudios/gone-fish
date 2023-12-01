@@ -81,39 +81,39 @@ fn check_for_volume_events(
 fn check_for_catch_fish_events(
     commands: Commands,
     world: &World,
-    catch_fish_event: EventReader<CatchFishEvent>,
+    ev_catch_fish: EventReader<CatchFishEvent>,
 ) {
-    handle_audio_events(commands, world, catch_fish_event, "audio/pop-2.ogg");
+    handle_audio_events(commands, world, ev_catch_fish, "audio/pop-2.ogg");
 }
 
 fn check_for_drop_fish_events(
     commands: Commands,
     world: &World,
-    drop_fish_event: EventReader<DropFishEvent>,
+    ev_drop_fish: EventReader<DropFishEvent>,
 ) {
-    handle_audio_events(commands, world, drop_fish_event, "audio/drop-2.ogg");
+    handle_audio_events(commands, world, ev_drop_fish, "audio/drop-2.ogg");
 }
 
 fn check_for_fish_deposit_events(
     commands: Commands,
     world: &World,
-    deposit_fish_event: EventReader<DepositFishEvent>,
+    ev_deposit_fish: EventReader<DepositFishEvent>,
 ) {
-    handle_audio_events(commands, world, deposit_fish_event, "audio/pop-1.ogg");
+    handle_audio_events(commands, world, ev_deposit_fish, "audio/pop-1.ogg");
 }
 
 fn check_for_trash_collision_events(
     commands: Commands,
     world: &World,
-    trash_collision_event: EventReader<TrashCollisionEvent>,
+    ev_trash_collision: EventReader<TrashCollisionEvent>,
 ) {
-    handle_audio_events(commands, world, trash_collision_event, "audio/pop-1.ogg");
+    handle_audio_events(commands, world, ev_trash_collision, "audio/pop-1.ogg");
 }
 
 fn check_for_reeling_events(
     commands: Commands,
     world: &World,
-    trash_collision_event: EventReader<ReelingFishEvent>,
+    ev_reeling_fish: EventReader<ReelingFishEvent>,
 ) {
-    handle_audio_events(commands, world, trash_collision_event, "audio/pop-1.ogg");
+    handle_audio_events(commands, world, ev_reeling_fish, "audio/pop-1.ogg");
 }

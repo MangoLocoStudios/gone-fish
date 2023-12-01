@@ -92,7 +92,6 @@ pub fn setup(
 }
 
 fn player_movement(
-    _event: EventReader<PortCollisionEvent>,
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
     window: Query<&mut Window>,
@@ -130,7 +129,7 @@ fn player_movement(
 fn check_for_port_collisions(
     mut player_query: Query<&Transform, With<Player>>,
     mut port_query: Query<(&Transform, &Handle<Image>), With<Port>>,
-    mut port_collision_event: EventWriter<PortCollisionEvent>,
+    mut ev_port_collision: EventWriter<PortCollisionEvent>,
     assets: Res<Assets<Image>>,
 ) {
     let player = player_query.single_mut();
@@ -147,7 +146,7 @@ fn check_for_port_collisions(
             .as_vec2()
             * port.scale.truncate(),
     ) {
-        port_collision_event.send(PortCollisionEvent {
+        ev_port_collision.send(PortCollisionEvent {
             collision_direction: collision,
         });
     }

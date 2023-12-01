@@ -4,8 +4,14 @@
     <meta charset="UTF-8" />
 </head>
 <script type="module">
+    import './restart-audio-context.js'
     import init from './gone-fish.js'
-    init()
+
+    init().catch((error) => {
+        if (!error.message.startsWith("Using exceptions for control flow, don't mind me. This isn't actually an error!")) {
+            throw error;
+        }
+    });
 </script>
 
 </html>

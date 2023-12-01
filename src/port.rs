@@ -56,7 +56,7 @@ fn setup(
 
     let ui_text_style = TextStyle {
         font: asset_server.load("fonts/Pixellari.ttf"),
-        font_size: 10.0,
+        font_size: 40.0,
         color: Color::WHITE,
     };
 
@@ -71,7 +71,7 @@ fn setup(
             parts: vec![ui.clone()],
         },
         VariableCurve {
-            keyframe_timestamps: vec![0.0, 3., 6.0],
+            keyframe_timestamps: vec![0.0, 3., 6.],
             keyframes: Keyframes::Translation(vec![
                 Vec3::new(20.0, 12.0, 0.0),
                 Vec3::new(20.0, 15.0, 0.0),
@@ -103,7 +103,11 @@ fn setup(
                         TextSection::from_style(ui_text_style.clone()),
                     ])
                     .with_alignment(TextAlignment::Center),
-                    transform: Transform::from_xyz(50.0, 0.0, 0.0),
+                    transform: Transform {
+                        translation: Default::default(),
+                        rotation: Default::default(),
+                        scale: Vec3::splat(0.25),
+                    },
                     ..default()
                 },
                 ui,

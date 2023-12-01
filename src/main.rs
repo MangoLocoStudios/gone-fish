@@ -9,6 +9,7 @@ pub mod player;
 pub mod port;
 pub mod resources;
 pub mod rod;
+pub mod speech;
 pub mod systems;
 pub mod trash;
 mod ui;

@@ -1,6 +1,4 @@
-use bevy::{prelude::*, sprite::collide_aabb::collide};
-
-use crate::components::{CameraShake, Weight};
+use crate::components::{CameraShake, DecayTimer, Weight};
 use crate::{
     components::{Acceleration, Velocity},
     events::{BoatCollisionEvent, FishCollisionWithRodEvent, TrashCollisionEvent},
@@ -9,6 +7,7 @@ use crate::{
     trash::Trash,
     GameState::Game,
 };
+use bevy::{prelude::*, sprite::collide_aabb::collide};
 
 #[derive(Default)]
 pub struct RodProperties {
@@ -16,7 +15,7 @@ pub struct RodProperties {
     pub pull: f32,
 }
 
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone, Copy, Eq, PartialEq)]
 pub enum RodVariant {
     StickWithString,
     TwigAndTwineTackler,
@@ -73,6 +72,7 @@ impl Plugin for RodPlugin {
                 check_for_fish_collisions,
                 check_for_trash_collisions,
                 update_line,
+                despawn_player_text,
             )
                 .run_if(in_state(Game)),
         );
@@ -162,7 +162,7 @@ fn check_for_boat_collisions(
     line_query: Query<Entity, With<Line>>,
     player_query: Query<&Transform, With<Player>>,
     boat_query: Query<(&Transform, &Handle<Image>), With<Boat>>,
-    mut boat_collision_event: EventWriter<BoatCollisionEvent>,
+    mut ev_boat_collision: EventWriter<BoatCollisionEvent>,
     assets: Res<Assets<Image>>,
 ) {
     let player = player_query.single();
@@ -196,11 +196,25 @@ fn check_for_boat_collisions(
         return;
     }
 
-    boat_collision_event.send_default();
+    ev_boat_collision.send_default();
 
     // Despawn rod when it's reeled back in
     commands.entity(rod_entity).despawn();
     commands.entity(line_entity).despawn();
+}
+
+#[derive(Component)]
+pub struct PlayerSpeech;
+
+pub fn despawn_player_text(
+    mut commands: Commands,
+    mut text_query: Query<(&DecayTimer, Entity), With<PlayerSpeech>>,
+) {
+    for (timer, entity) in &mut text_query {
+        if timer.timer.finished() {
+            commands.entity(entity).despawn();
+        }
+    }
 }
 
 fn check_for_fish_collisions(

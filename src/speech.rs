@@ -191,16 +191,16 @@ fn check_for_fish_deposit_event(
     };
 
     let speech_options = [
-        "Fresh start! Ready for another round,\nbaiting the hooks.",
-        "Empty hold, gearing up for\nthe next big catch.",
-        "Cleared the deck, setting out for\nanother fruitful fishing.",
-        "Unload complete, time to cast\nagain for a new haul.",
-        "Back at sea, hooks in the water\nfor more fish.",
-        "Emptied the nets, let's head back\nand cast anew.",
-        "Port visit done, preparing for\nthe next fishing adventure.",
-        "Fresh bait, clear skies – setting\nsail for another bounty.",
-        "Docked and done, now back to\nthe open waters.",
-        "Recharged and refueled, ready to\nreel in the next load.",
+        "Fresh start! Ready for another round.\nBaiting the hooks...",
+        "Empty hold, gearing up for\nthe next big catch!",
+        "Cleared the deck... Best be settin' out for\nanother day of fishing...",
+        "Unload complete. Time to cast\nagain and get a new haul!",
+        "Back at sea! Hooks in the water\nfor more good fishin'!",
+        "Emptied the nets! Let's head back\nand cast anew...",
+        "Port visit over... Preparin' for\nthe next fishing adventure!",
+        "Fresh bait, clear skies – setting\nsail for another bounty!",
+        "Docked and done! Now back to\nthe open waters.",
+        "Recharged and refueled! Ready to\nreel in the next load!",
     ];
 
     for _ in deposit_fish_event.read() {

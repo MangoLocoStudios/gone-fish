@@ -63,19 +63,21 @@ struct Line;
 
 impl Plugin for RodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<BoatCollisionEvent>().add_systems(
-            Update,
-            (
-                cast_rod,
-                rod_movement,
-                check_for_boat_collisions,
-                check_for_fish_collisions,
-                check_for_trash_collisions,
-                update_line,
-                despawn_player_text,
-            )
-                .run_if(in_state(Game)),
-        );
+        app.add_event::<BoatCollisionEvent>()
+            .add_systems(Startup, setup)
+            .add_systems(
+                Update,
+                (
+                    cast_rod,
+                    rod_movement,
+                    check_for_boat_collisions,
+                    check_for_fish_collisions,
+                    check_for_trash_collisions,
+                    update_line,
+                    despawn_player_text,
+                )
+                    .run_if(in_state(Game)),
+            );
     }
 }
 

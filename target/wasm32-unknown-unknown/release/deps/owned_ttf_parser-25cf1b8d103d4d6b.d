@@ -1,0 +1,10 @@
+/Users/jeynesb/Desktop/gone-fish/target/wasm32-unknown-unknown/release/deps/libowned_ttf_parser-25cf1b8d103d4d6b.rmeta: /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/lib.rs /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/convert.rs /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/owned.rs /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/preparse.rs
+
+/Users/jeynesb/Desktop/gone-fish/target/wasm32-unknown-unknown/release/deps/libowned_ttf_parser-25cf1b8d103d4d6b.rlib: /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/lib.rs /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/convert.rs /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/owned.rs /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/preparse.rs
+
+/Users/jeynesb/Desktop/gone-fish/target/wasm32-unknown-unknown/release/deps/owned_ttf_parser-25cf1b8d103d4d6b.d: /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/lib.rs /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/convert.rs /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/owned.rs /Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/preparse.rs
+
+/Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/lib.rs:
+/Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/convert.rs:
+/Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/owned.rs:
+/Users/jeynesb/.cargo/registry/src/index.crates.io-6f17d22bba15001f/owned_ttf_parser-0.20.0/src/preparse.rs:

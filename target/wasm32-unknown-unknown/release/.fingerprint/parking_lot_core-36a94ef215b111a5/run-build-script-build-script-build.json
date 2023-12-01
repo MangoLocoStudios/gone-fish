@@ -1,0 +1,1 @@
+{"rustc":16084113536717750113,"features":"","target":0,"profile":0,"path":0,"deps":[[3556327346382006477,"build_script_build",false,11418088295848139190]],"local":[{"RerunIfChanged":{"output":"wasm32-unknown-unknown/release/build/parking_lot_core-36a94ef215b111a5/output","paths":["build.rs"]}}],"rustflags":[],"metadata":0,"config":0,"compile_kind":0}

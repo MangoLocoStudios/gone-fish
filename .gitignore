@@ -2,6 +2,7 @@
 # will have compiled files and executables
 debug/
 target/
+GoneFish.app/
 
 # Remove Cargo.lock from gitignore if creating an executable, leave it for libraries
 # More information here https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html
@@ -42,3 +43,4 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+/GoneFish.app/
